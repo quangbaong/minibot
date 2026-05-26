@@ -53,15 +53,21 @@ function loginTelegram() {
 
 /* ───────────────────────── CATALOG ───────────────────────── */
 async function loadCatalog() {
+  $('loader').hidden = false;
+  $('loaderText').textContent = 'Đang tải catalog…';
   try {
-    const res = await fetch('catalog.json', { cache: 'no-cache' });
+    const res = await fetch('catalog.json?t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     state.catalog = await res.json();
+    const n = Object.keys(state.catalog).length;
+    if (!n) throw new Error('catalog rỗng');
+    $('loader').hidden = true;
+    renderAlphabet();
   } catch (e) {
-    toast('Không tải được catalog!', 'error');
-    state.catalog = {};
+    $('loaderText').innerHTML =
+      '❌ Lỗi tải catalog<br><small style="opacity:.6">' + e.message + '</small>';
+    toast('Không tải được catalog: ' + e.message, 'error');
   }
-  $('loader').hidden = true;
-  renderAlphabet();
 }
 
 /* ───────────────────────── TABS ───────────────────────── */
