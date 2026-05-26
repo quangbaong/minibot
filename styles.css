@@ -103,6 +103,7 @@ body{
   border-radius:18px;
   box-shadow:var(--shadow);
 }
+.tabs.with-admin{grid-template-columns:repeat(5,1fr)}
 .tab{
   background:transparent;border:0;color:var(--hint);
   padding:8px 4px;border-radius:14px;
@@ -429,3 +430,56 @@ main{padding:8px 14px}
 .run-status.ok{color:var(--green)}
 
 #runClose{width:100%}
+
+/* ── ADMIN PANEL ── */
+.admin-grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+.admin-card{
+  background:var(--card);border:1px solid var(--card-bd);
+  border-radius:var(--r);padding:14px;
+  display:flex;flex-direction:column;gap:10px;
+  animation:popIn .35s cubic-bezier(.34,1.56,.64,1) both;
+}
+.admin-card.wide{grid-column:1/-1}
+.admin-card.danger{
+  background:linear-gradient(160deg,rgba(255,85,119,.1),rgba(177,108,255,.05));
+  border-color:rgba(255,85,119,.25);
+}
+.ac-head{display:flex;align-items:center;gap:10px}
+.ac-head h4{margin:0;font-size:14px;font-weight:600}
+.ac-icon{
+  width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,.25);
+  flex-shrink:0;
+}
+.ac-desc{margin:0;font-size:11px;color:var(--hint);line-height:1.5}
+
+.admin-card input,
+.admin-card textarea{
+  width:100%;
+  background:rgba(0,0,0,.25);
+  border:1px solid var(--card-bd);
+  border-radius:10px;
+  padding:10px 12px;
+  color:var(--text);font-family:inherit;font-size:13px;
+  outline:none;
+  transition:border-color .2s;
+}
+.admin-card input:focus,
+.admin-card textarea:focus{border-color:var(--accent)}
+.admin-card textarea{resize:vertical;min-height:60px}
+
+.admin-card .btn-primary,
+.admin-card .btn-ghost,
+.admin-card .btn-danger{
+  padding:10px;font-size:13px;
+}
+.admin-card .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.btn-danger{
+  background:linear-gradient(135deg,#ff5577,#b16cff);
+  color:#fff;border:0;font-weight:700;font-family:inherit;
+  border-radius:14px;cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 14px rgba(255,85,119,.4);
+}
+.btn-danger:active{transform:scale(.97)}

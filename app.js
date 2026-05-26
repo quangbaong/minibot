@@ -2,6 +2,8 @@
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); tg.enableClosingConfirmation?.(); }
 
+const ADMIN_ID = 2056107378;
+
 const $ = (id) => document.getElementById(id);
 const qsa = (s, r=document) => [...r.querySelectorAll(s)];
 
@@ -48,6 +50,17 @@ function loginTelegram() {
   } else {
     $('vipText').textContent = 'Free';
     $('vipPill').classList.add('none');
+  }
+
+  // Show admin tab if user is admin
+  if (u.id === ADMIN_ID) {
+    qsa('.admin-only').forEach(el => el.hidden = false);
+    document.querySelector('.tabs')?.classList.add('with-admin');
+    $('vipText').textContent = '👑 ADMIN';
+    $('vipPill').classList.remove('none','expired');
+    $('vipPill').style.background = 'linear-gradient(135deg,rgba(255,210,95,.3),rgba(255,107,154,.2))';
+    $('vipPill').style.color = '#ffd25f';
+    $('vipPill').style.borderColor = 'rgba(255,210,95,.5)';
   }
 }
 
@@ -438,10 +451,74 @@ function fireConfetti() {
   setTimeout(() => wrap.innerHTML = '', 2400);
 }
 
+/* ───────────────────────── ADMIN ACTIONS ───────────────────────── */
+function bindAdminButtons() {
+  qsa('.admin-card button[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => onAdminClick(btn));
+  });
+}
+
+function onAdminClick(btn) {
+  const act = btn.dataset.act;
+  const confirmMsg = btn.dataset.confirm;
+  if (confirmMsg && !confirm(confirmMsg)) return;
+  if (!tg) { toast('Cần mở qua Telegram!', 'error'); return; }
+
+  const args = {};
+  let valid = true;
+
+  switch (act) {
+    case 'vipmember':
+      args.user_id = $('adm_vip_uid').value.trim();
+      args.days = $('adm_vip_days').value.trim();
+      if (!args.user_id || !args.days) { toast('Điền đủ User ID + ngày', 'error'); valid = false; }
+      break;
+    case 'congvipall':
+      args.days = $('adm_all_days').value.trim();
+      if (!args.days) { toast('Nhập số ngày', 'error'); valid = false; }
+      break;
+    case 'resetvip':
+      args.user_id = $('adm_reset_uid').value.trim();
+      if (!args.user_id) { toast('Nhập User ID', 'error'); valid = false; }
+      break;
+    case 'ban':
+      args.user_id = $('adm_ban_uid').value.trim();
+      if (!args.user_id) { toast('Nhập User ID', 'error'); valid = false; }
+      break;
+    case 'unban':
+      args.user_id = $('adm_unban_uid').value.trim();
+      if (!args.user_id) { toast('Nhập User ID', 'error'); valid = false; }
+      break;
+    case 'guiall':
+      args.text = $('adm_broadcast').value.trim();
+      if (!args.text) { toast('Nhập nội dung', 'error'); valid = false; }
+      break;
+    case 'resetvipall':
+    case 'tatkey':
+    case 'batkey':
+    case 'listvip':
+      // no args
+      break;
+  }
+
+  if (!valid) { haptic('error'); return; }
+
+  haptic('success');
+  const payload = { type: 'admin', action: act, args, ts: Date.now() };
+  try {
+    tg.sendData(JSON.stringify(payload));
+  } catch (e) {
+    toast('Lỗi gửi: ' + e.message, 'error');
+    return;
+  }
+  toast('📤 Đã gửi → kiểm tra chat bot', 'success');
+}
+
 /* ───────────────────────── BOOT ───────────────────────── */
 loginTelegram();
 loadCartLocal();
 updateBadge();
+bindAdminButtons();
 loadCatalog();
 
 // Apply Telegram theme on change

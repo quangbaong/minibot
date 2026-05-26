@@ -6,7 +6,7 @@
 <title>BANNEI MOD LQ</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -36,6 +36,7 @@
   <button class="tab" data-tab="extras"><span>🛠️</span><label>Bổ trợ</label></button>
   <button class="tab" data-tab="cart"><span>🛒</span><label>Giỏ <em id="cartBadge">0</em></label></button>
   <button class="tab" data-tab="search"><span>🔎</span><label>Tìm</label></button>
+  <button class="tab admin-only" data-tab="admin" hidden><span>👑</span><label>Admin</label></button>
 </nav>
 
 <main>
@@ -131,18 +132,74 @@
     </div>
   </section>
 
-  <!-- SEARCH -->
-  <section class="page" id="page-search">
+  <!-- ADMIN -->
+  <section class="page admin-page" id="page-admin">
     <div class="page-head">
-      <h2>Tìm kiếm</h2>
-      <p>Gõ tên tướng hoặc skin</p>
+      <h2>👑 Admin Panel</h2>
+      <p>Toàn bộ quyền quản trị hệ thống</p>
     </div>
 
-    <div class="search-bar">
-      <span>🔍</span>
-      <input id="searchInput" placeholder="Vd: Nakroth Vệ Thần"/>
+    <div class="admin-grid">
+
+      <div class="admin-card">
+        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ffd25f,#ff6b9a)">💎</span><h4>Cấp VIP</h4></div>
+        <input type="number" placeholder="User ID" id="adm_vip_uid"/>
+        <input type="number" placeholder="Số ngày" id="adm_vip_days"/>
+        <button class="btn-primary" data-act="vipmember">Cấp VIP</button>
+      </div>
+
+      <div class="admin-card">
+        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">📢</span><h4>Cộng VIP toàn server</h4></div>
+        <input type="number" placeholder="Số ngày" id="adm_all_days"/>
+        <button class="btn-primary" data-act="congvipall">Cộng tất cả</button>
+      </div>
+
+      <div class="admin-card">
+        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#8a93a4,#5eb1ff)">📋</span><h4>Danh sách VIP</h4></div>
+        <p class="ac-desc">Bot sẽ gửi list vào chat</p>
+        <button class="btn-ghost" data-act="listvip">Hiện list VIP</button>
+      </div>
+
+      <div class="admin-card">
+        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff6b9a,#ff5577)">♻️</span><h4>Reset VIP 1 user</h4></div>
+        <input type="number" placeholder="User ID" id="adm_reset_uid"/>
+        <button class="btn-ghost" data-act="resetvip">Tước VIP</button>
+      </div>
+
+      <div class="admin-card danger">
+        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff5577,#b16cff)">💥</span><h4>Reset ALL VIP</h4></div>
+        <p class="ac-desc">⚠️ Xoá sạch toàn bộ VIP</p>
+        <button class="btn-danger" data-act="resetvipall" data-confirm="Reset SẠCH toàn bộ VIP?">Reset Tất Cả</button>
+      </div>
+
+      <div class="admin-card">
+        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff5577,#ffd25f)">🚫</span><h4>Ban user</h4></div>
+        <input type="number" placeholder="User ID" id="adm_ban_uid"/>
+        <button class="btn-danger" data-act="ban">Ban</button>
+      </div>
+
+      <div class="admin-card">
+        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">🔓</span><h4>Unban user</h4></div>
+        <input type="number" placeholder="User ID" id="adm_unban_uid"/>
+        <button class="btn-primary" data-act="unban">Unban</button>
+      </div>
+
+      <div class="admin-card">
+        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#6c8cff,#b16cff)">🔑</span><h4>Chế độ Key</h4></div>
+        <p class="ac-desc">Tắt = gửi file thẳng. Bật = bắt vượt link.</p>
+        <div class="btn-row">
+          <button class="btn-primary" data-act="batkey">Bật</button>
+          <button class="btn-ghost" data-act="tatkey">Tắt</button>
+        </div>
+      </div>
+
+      <div class="admin-card wide">
+        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#b16cff,#ff6b9a)">📣</span><h4>Broadcast (guiall)</h4></div>
+        <textarea placeholder="Nội dung gửi cho tất cả user…" id="adm_broadcast" rows="3"></textarea>
+        <button class="btn-primary" data-act="guiall">Gửi broadcast</button>
+      </div>
+
     </div>
-    <div class="search-results" id="searchResults"></div>
   </section>
 
 </main>
@@ -172,6 +229,6 @@
   </div>
 </div>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
