@@ -288,7 +288,6 @@ $('runBtn').addEventListener('click', () => {
 
   haptic('success');
   fireConfetti();
-  toast('🚀 Đang gửi yêu cầu...', 'success');
 
   const payload = {
     type: 'chaymod',
@@ -301,7 +300,55 @@ $('runBtn').addEventListener('click', () => {
     toast('Lỗi gửi: ' + e.message, 'error');
     return;
   }
-  setTimeout(() => tg.close?.(), 1200);
+
+  showRunOverlay(entries.length);
+});
+
+function showRunOverlay(itemCount) {
+  $('runOverlay').hidden = false;
+  $('runTitle').textContent = '🎉 Đã gửi yêu cầu!';
+  $('runMsg').innerHTML =
+    `Bot đang xử lý <b>${itemCount}</b> mục Mod.<br>Quay lại chat để nhận file ZIP nhé!`;
+
+  const steps = [
+    { p: 15, t: '🔄 Đã nhận dữ liệu, đang khởi tạo...' },
+    { p: 40, t: '🛠️ Đang ghép mã Mod...' },
+    { p: 70, t: '📦 Đang đóng gói file ZIP...' },
+    { p: 95, t: '📤 Sắp gửi file vào chat của bạn...' },
+  ];
+  let i = 0;
+  const bar = $('runBar');
+  const status = $('runStatus');
+  bar.style.width = '5%';
+  status.textContent = '⏳ Đang gửi yêu cầu...';
+  status.classList.remove('ok');
+
+  const tick = () => {
+    if (i >= steps.length) {
+      bar.style.width = '100%';
+      status.textContent = '✅ Hoàn tất gửi yêu cầu. Mở chat để xem file!';
+      status.classList.add('ok');
+      return;
+    }
+    const s = steps[i++];
+    bar.style.width = s.p + '%';
+    status.textContent = s.t;
+    setTimeout(tick, 1100 + Math.random() * 600);
+  };
+  setTimeout(tick, 500);
+
+  // Cleanup cart after send
+  state.cart = {};
+  saveCart();
+  updateBadge();
+  renderCart();
+}
+
+$('runClose').addEventListener('click', () => {
+  haptic('light');
+  $('runOverlay').hidden = true;
+  // Optional: close mini app khi user chủ động bấm
+  setTimeout(() => tg?.close?.(), 200);
 });
 
 /* ───────────────────────── SEARCH ───────────────────────── */

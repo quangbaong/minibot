@@ -345,3 +345,87 @@ main{padding:8px 14px}
   from{transform:translateY(-20px) rotate(0);opacity:1}
   to{transform:translateY(110vh) rotate(720deg);opacity:0}
 }
+
+/* ── RUN OVERLAY (sau khi bấm Chạy Mod) ── */
+.run-overlay{
+  position:fixed;inset:0;z-index:1800;
+  background:rgba(15,17,21,.92);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  animation:fadeIn .35s ease both;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.run-card{
+  width:100%;max-width:340px;
+  background:linear-gradient(160deg,rgba(108,140,255,.18),rgba(177,108,255,.12));
+  border:1px solid var(--card-bd);
+  border-radius:22px;
+  padding:30px 22px 22px;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  animation:popUp .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes popUp{
+  from{opacity:0;transform:translateY(20px) scale(.9)}
+  to{opacity:1;transform:none}
+}
+
+.run-anim{
+  position:relative;width:120px;height:120px;margin:0 auto 18px;
+  display:flex;align-items:center;justify-content:center;
+}
+.run-emoji{
+  font-size:54px;z-index:3;
+  animation:rocket 2.4s ease-in-out infinite;
+  filter:drop-shadow(0 4px 12px rgba(108,140,255,.6));
+}
+@keyframes rocket{
+  0%,100%{transform:translateY(0) rotate(-8deg)}
+  50%{transform:translateY(-8px) rotate(8deg)}
+}
+.ring{
+  position:absolute;border-radius:50%;
+  border:2px solid var(--accent);
+  opacity:0;
+  animation:ripple 2s ease-out infinite;
+}
+.r1{width:60px;height:60px}
+.r2{width:60px;height:60px;animation-delay:.6s;border-color:var(--accent2)}
+.r3{width:60px;height:60px;animation-delay:1.2s;border-color:var(--rose)}
+@keyframes ripple{
+  0%{width:60px;height:60px;opacity:.8}
+  100%{width:140px;height:140px;opacity:0}
+}
+
+.run-card h3{
+  margin:0 0 6px;font-size:20px;font-weight:700;
+  background:linear-gradient(135deg,#fff,var(--accent));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.run-card p{margin:0 0 18px;font-size:13px;color:var(--hint);line-height:1.5}
+
+.run-progress{
+  height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;
+  margin-bottom:12px;
+}
+.run-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--accent),var(--accent2),var(--rose));
+  background-size:200% 100%;
+  border-radius:99px;
+  animation:shimmer 1.6s linear infinite;
+  transition:width .8s ease;
+}
+@keyframes shimmer{
+  from{background-position:0 0}
+  to{background-position:200% 0}
+}
+
+.run-status{
+  font-size:12px;color:var(--hint);margin-bottom:18px;
+  min-height:18px;
+}
+.run-status.ok{color:var(--green)}
+
+#runClose{width:100%}
