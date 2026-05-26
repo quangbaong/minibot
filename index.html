@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<title>BANNEI MOD LQ</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+<div id="aurora">
+  <span class="blob b1"></span>
+  <span class="blob b2"></span>
+  <span class="blob b3"></span>
+</div>
+
+<header class="topbar">
+  <div class="user-card" id="userCard">
+    <div class="avatar" id="avatar"></div>
+    <div class="user-meta">
+      <div class="user-name" id="userName">Đang đăng nhập...</div>
+      <div class="user-id" id="userId">—</div>
+    </div>
+    <div class="vip-pill" id="vipPill">
+      <span class="vip-dot"></span>
+      <span id="vipText">Kiểm tra…</span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="heroes"><span>🎭</span><label>Tướng</label></button>
+  <button class="tab" data-tab="extras"><span>🛠️</span><label>Bổ trợ</label></button>
+  <button class="tab" data-tab="cart"><span>🛒</span><label>Giỏ <em id="cartBadge">0</em></label></button>
+  <button class="tab" data-tab="search"><span>🔎</span><label>Tìm</label></button>
+</nav>
+
+<main>
+
+  <!-- HEROES -->
+  <section class="page active" id="page-heroes">
+    <div class="page-head">
+      <h2>Chọn tướng</h2>
+      <p>Lọc theo chữ cái đầu</p>
+    </div>
+
+    <div class="alpha-grid" id="alphaGrid"></div>
+
+    <div class="hero-list-wrap" id="heroListWrap" hidden>
+      <button class="back-btn" id="heroBack">‹ Đổi chữ cái</button>
+      <h3 id="heroListTitle"></h3>
+      <div class="hero-grid" id="heroGrid"></div>
+    </div>
+
+    <div class="skin-list-wrap" id="skinListWrap" hidden>
+      <button class="back-btn" id="skinBack">‹ Đổi tướng</button>
+      <h3 id="skinListTitle"></h3>
+      <div class="skin-grid" id="skinGrid"></div>
+    </div>
+  </section>
+
+  <!-- EXTRAS -->
+  <section class="page" id="page-extras">
+    <div class="page-head">
+      <h2>Chức năng bổ trợ</h2>
+      <p>Không bắt buộc kèm Skin</p>
+    </div>
+
+    <div class="extras-list">
+      <div class="extra-card" data-extra="camxa">
+        <div class="extra-icon">📷</div>
+        <div class="extra-body">
+          <h4>Cam Xa</h4>
+          <p>Tuỳ chỉnh tầm zoom 105% → 295%</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+      <div class="extra-card" data-extra="hdchieu">
+        <div class="extra-icon">🎥</div>
+        <div class="extra-body">
+          <h4>HD Chiêu</h4>
+          <p>Hiệu ứng kỹ năng sắc nét hơn</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+      <div class="extra-card" data-extra="modrov">
+        <div class="extra-icon">🇹🇭</div>
+        <div class="extra-body">
+          <h4>Mod Server ROV</h4>
+          <p>Chuyển nguồn sang server Thái</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+      <div class="extra-card" data-extra="mayyeu">
+        <div class="extra-icon">📱</div>
+        <div class="extra-body">
+          <h4>Tối ưu Máy Yếu</h4>
+          <p>Giảm hiệu ứng — tăng FPS</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+    </div>
+
+    <!-- Cam Xa picker -->
+    <div class="zoom-picker" id="zoomPicker" hidden>
+      <button class="back-btn" id="zoomBack">‹ Quay lại</button>
+      <h3>Chọn mức zoom</h3>
+      <div class="zoom-grid" id="zoomGrid"></div>
+    </div>
+  </section>
+
+  <!-- CART -->
+  <section class="page" id="page-cart">
+    <div class="page-head">
+      <h2>Giỏ hàng Mod</h2>
+      <p>Danh sách bạn đã chọn</p>
+    </div>
+
+    <div class="cart-list" id="cartList"></div>
+    <div class="empty" id="cartEmpty">
+      <div class="empty-icon">📭</div>
+      <p>Giỏ trống. Hãy chọn ít nhất 1 Skin hoặc 1 chức năng.</p>
+    </div>
+
+    <div class="cart-actions" id="cartActions" hidden>
+      <button class="btn-ghost" id="clearBtn">🧹 Xoá tất cả</button>
+      <button class="btn-primary" id="runBtn">🚀 Chạy Mod</button>
+    </div>
+  </section>
+
+  <!-- SEARCH -->
+  <section class="page" id="page-search">
+    <div class="page-head">
+      <h2>Tìm kiếm</h2>
+      <p>Gõ tên tướng hoặc skin</p>
+    </div>
+
+    <div class="search-bar">
+      <span>🔍</span>
+      <input id="searchInput" placeholder="Vd: Nakroth Vệ Thần"/>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="loader" id="loader" hidden>
+  <div class="spinner"></div>
+  <p id="loaderText">Đang tải catalog…</p>
+</div>
+
+<div class="confetti" id="confetti"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
