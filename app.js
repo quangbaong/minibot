@@ -195,17 +195,16 @@ async function loadSkinCodes() {
 
 function getHeroIconUrl(heroName, skinName) {
   const info = state.heroIcons[heroName];
-  if (!info || !info.cdn_id) return '';
+  if (!info || !info.prefix) return '';
+  const CDN = '30'; // fixed game-version CDN prefix
   if (skinName) {
     const skinCode = state.skinCodes[heroName + '|' + skinName];
     if (skinCode) {
-      return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + info.cdn_id + skinCode + 'head.jpg';
+      return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + skinCode + 'head.jpg';
     }
-    // fallback: hero portrait
-    return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + info.cdn_id + info.prefix + 'head.jpg';
+    return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + info.prefix + 'head.jpg';
   }
-  if (!info.prefix) return '';
-  return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + info.cdn_id + info.prefix + 'head.jpg';
+  return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + info.prefix + 'head.jpg';
 }
 
 function heroIconImg(heroName, skinName, cls) {
@@ -275,7 +274,7 @@ function openHero(folder) {
   state.currentHero = folder;
   haptic('medium');
   const skins = state.catalog[folder] || [];
-  const hasCdn = !!(state.heroIcons[folder] && state.heroIcons[folder].cdn_id);
+  const hasCdn = !!(state.heroIcons[folder] && state.heroIcons[folder].prefix);
   $('skinListTitle').textContent = folder;
   $('skinListSub').textContent = skins.length ? `${skins.length} skin có sẵn` : 'Chưa có skin';
   const grid = $('skinGrid');
