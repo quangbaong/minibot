@@ -586,7 +586,6 @@ $('clearBtn').addEventListener('click', () => {
 $('runBtn').addEventListener('click', () => {
   const entries = Object.entries(state.cart);
   if (!entries.length) { toast('Giỏ trống!', 'error'); haptic('error'); return; }
-  if (!tg?.initDataUnsafe?.user) { showWebLoginGate(); toast('Vui long mo qua Telegram de chay Mod!', 'error'); return; }
 
   // validation: Cam Xa only — must have ≥1 skin
   const onlyExtras = entries.every(([k]) => EXTRA_KEYS.has(k));
@@ -598,21 +597,39 @@ $('runBtn').addEventListener('click', () => {
   haptic('success');
   if (state.settings.confetti) fireConfetti();
 
-  const payload = {
-    type: 'chaymod',
-    items: state.cart,
-    ts: Date.now(),
-    vip: state.isVip,
-    admin: state.isAdmin,
-  };
-  try {
-    tg.sendData(JSON.stringify(payload));
-  } catch (e) {
-    toast('Lỗi gửi: ' + e.message, 'error');
-    return;
+  const inTelegram = !!(tg?.initDataUnsafe?.user);
+
+  if (inTelegram) {
+    // Telegram WebView: use sendData
+    const payload = { type: 'chaymod', items: state.cart, ts: Date.now(), vip: state.isVip, admin: state.isAdmin };
+    try {
+      tg.sendData(JSON.stringify(payload));
+    } catch (e) {
+      toast('Lỗi gửi: ' + e.message, 'error');
+      return;
+    }
+    showRunOverlay(entries.length);
+  } else {
+    // Web mode: encode cart → deep link to bot
+    const cartJson = JSON.stringify(state.cart);
+    const encoded = btoa(unescape(encodeURIComponent(cartJson))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    const deepLink = 'https://t.me/MODSKINin1_bot?start=mod_' + encoded;
+    toast('📤 Đang chuyển sang Telegram...', 'success');
+    setTimeout(() => { window.open(deepLink, '_blank'); }, 500);
+    showRunOverlayWeb(entries.length);
   }
-  showRunOverlay(entries.length);
 });
+
+function showRunOverlayWeb(itemCount) {
+  $('runOverlay').hidden = false;
+  $('runTitle').textContent = '🎉 Đã gửi yêu cầu!';
+  $('runMsg').innerHTML = `Bot đang xử lý <b>${itemCount}</b> mục Mod.<br>📬 <b>Kiểm tra Telegram để nhận file ZIP!</b>`;
+  $('runStatus').textContent = '✅ Đã chuyển sang Telegram';
+  $('runStatus').classList.add('ok');
+  $('runBar').style.width = '100%';
+  $('runClose').textContent = 'Đi Telegram nhận file';
+  $('runStay').textContent = 'Ở lại tiếp tục Mod';
+}
 
 function showRunOverlay(itemCount) {
   $('runOverlay').hidden = false;
