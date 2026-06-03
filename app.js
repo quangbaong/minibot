@@ -127,12 +127,12 @@ function showWebLoginGate() {
       <div class="wlg-card">
         <div class="wlg-logo">🛡️</div>
         <h2>BANNEI MOD LQ</h2>
-        <p>Vui long mo qua <b>Telegram</b> de su dung.<br>Day la ung dung <b>Private</b> — chua public.</p>
+        <p>Ung dung <b>Private</b> — chi hoat dong trong <b>Telegram</b>.</p>
         <div class="wlg-buttons">
-          <a class="wlg-btn primary" href="https://t.me/bannei_mod_lq_bot" target="_blank">🤖 Mo Bot Telegram</a>
-          <a class="wlg-btn ghost" href="https://t.me/Baong19" target="_blank">📬 Lien he Admin</a>
+          <a class="wlg-btn primary" href="https://t.me/bannei_mod_lq_bot">🤖 Mo Bot Telegram</a>
+          <button class="wlg-btn ghost" onclick="location.href='tg://resolve?domain=bannei_mod_lq_bot'">⚡ Mo Truc Tiep Telegram</button>
         </div>
-        <p class="wlg-hint">Neu ban da co link Mini App tu Telegram, hay mo dung link do.</p>
+        <p class="wlg-hint">Sau khi mo bot, bam <b>Menu ☰</b> hoac go <b>/webapp</b> de mo Mini App.</p>
       </div>
     `;
     document.body.appendChild(gate);
@@ -194,13 +194,18 @@ async function loadSkinCodes() {
 }
 
 function getHeroIconUrl(heroName, skinName) {
-  const cdnId = state.heroIcons[heroName];
-  if (!cdnId) return '';
-  const lookupSkin = skinName || (state.catalog[heroName] && state.catalog[heroName][0]);
-  if (!lookupSkin) return '';
-  const skinCode = state.skinCodes[heroName + '|' + lookupSkin];
-  if (!skinCode) return '';
-  return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + cdnId + skinCode + 'head.jpg';
+  const info = state.heroIcons[heroName];
+  if (!info || !info.cdn_id) return '';
+  if (skinName) {
+    const skinCode = state.skinCodes[heroName + '|' + skinName];
+    if (skinCode) {
+      return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + info.cdn_id + skinCode + 'head.jpg';
+    }
+    // fallback: hero portrait
+    return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + info.cdn_id + info.prefix + 'head.jpg';
+  }
+  if (!info.prefix) return '';
+  return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + info.cdn_id + info.prefix + 'head.jpg';
 }
 
 function heroIconImg(heroName, skinName, cls) {
@@ -270,23 +275,34 @@ function openHero(folder) {
   state.currentHero = folder;
   haptic('medium');
   const skins = state.catalog[folder] || [];
+  const hasCdn = !!(state.heroIcons[folder] && state.heroIcons[folder].cdn_id);
   $('skinListTitle').textContent = folder;
   $('skinListSub').textContent = skins.length ? `${skins.length} skin có sẵn` : 'Chưa có skin';
   const grid = $('skinGrid');
   grid.innerHTML = '';
+  // Toggle grid layout: icon grid when CDN available, list otherwise
+  grid.className = hasCdn ? 'skin-grid icon-mode' : 'skin-grid';
   if (!skins.length) {
     grid.innerHTML = `<div class="empty"><div class="empty-icon">🎭</div><p>Tướng này chưa có skin trong catalog.</p></div>`;
   } else {
     skins.forEach((s, i) => {
       const cell = document.createElement('button');
-      cell.className = 'skin-cell';
+      cell.className = hasCdn ? 'skin-icon-cell' : 'skin-cell';
       if (state.cart[folder] === s) cell.classList.add('selected');
-      const skIcon = heroIconImg(folder, s, 'sk-icon');
-      cell.innerHTML = `
-        ${skIcon ? skIcon : `<span class="sk-num">${i + 1}</span>`}
-        <span class="sk-name">${escapeHtml(s)}</span>
-        <span class="sk-chev">›</span>
-      `;
+      const skIcon = heroIconImg(folder, s, 'sk-portrait');
+      if (hasCdn && skIcon) {
+        cell.innerHTML = `
+          ${skIcon}
+          <span class="sk-label">${escapeHtml(s.replace(folder + ' ', ''))}</span>
+          <span class="sk-check">✓</span>
+        `;
+      } else {
+        cell.innerHTML = `
+          <span class="sk-num">${i + 1}</span>
+          <span class="sk-name">${escapeHtml(s)}</span>
+          <span class="sk-chev">›</span>
+        `;
+      }
       cell.style.animationDelay = `${Math.min(i, 20) * 0.03}s`;
       cell.addEventListener('click', () => pickSkin(folder, s, cell));
       grid.appendChild(cell);
@@ -307,7 +323,7 @@ $('skinBack').addEventListener('click', () => { switchHeroesPane('list'); haptic
 function pickSkin(folder, skin, cellEl) {
   state.cart[folder] = skin;
   saveCart();
-  qsa('.skin-cell', $('skinGrid')).forEach((c) => c.classList.remove('selected'));
+  qsa('.skin-cell, .skin-icon-cell', $('skinGrid')).forEach((c) => c.classList.remove('selected'));
   cellEl.classList.add('selected');
   haptic('success');
   toast(`✓ ${folder} → ${shorten(skin, 26)}`, 'success');
@@ -567,7 +583,7 @@ $('clearBtn').addEventListener('click', () => {
 $('runBtn').addEventListener('click', () => {
   const entries = Object.entries(state.cart);
   if (!entries.length) { toast('Giỏ trống!', 'error'); haptic('error'); return; }
-  if (!tg) { toast('Cần mở qua Telegram!', 'error'); return; }
+  if (!tg?.initDataUnsafe?.user) { showWebLoginGate(); toast('Vui long mo qua Telegram de chay Mod!', 'error'); return; }
 
   // validation: Cam Xa only — must have ≥1 skin
   const onlyExtras = entries.every(([k]) => EXTRA_KEYS.has(k));
@@ -654,7 +670,7 @@ function onAdminClick(btn) {
   const act = btn.dataset.act;
   const confirmMsg = btn.dataset.confirm;
   if (confirmMsg && !confirm(confirmMsg)) return;
-  if (!tg) { toast('Cần mở qua Telegram!', 'error'); return; }
+  if (!tg?.initDataUnsafe?.user) { showWebLoginGate(); toast('Cần mở qua Telegram!', 'error'); return; }
   if (!state.isAdmin) { toast('Bạn không phải Admin!', 'error'); haptic('error'); return; }
 
   const args = {};
