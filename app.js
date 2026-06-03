@@ -30,6 +30,8 @@ const state = {
   totalHeroes: 0,
   totalSkins: 0,
   settings: loadSettings(),
+  heroIcons: {},
+  skinCodes: {},
 };
 
 const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'MOD ROV', 'Máy Yếu', 'Nút Bấm']);
@@ -61,9 +63,11 @@ function loginTelegram() {
     $('avatar').textContent = '?';
     $('vipText').textContent = 'N/A';
     $('vipPill').classList.add('none');
+    showWebLoginGate();
     return;
   }
 
+  hideWebLoginGate();
   const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'User';
   $('userName').textContent = name;
   $('userId').textContent = `ID: ${u.id}`;
@@ -112,6 +116,35 @@ function loginTelegram() {
   }
 }
 
+/* ── Web Login Gate (non-Telegram access) ── */
+function showWebLoginGate() {
+  let gate = $('webLoginGate');
+  if (!gate) {
+    gate = document.createElement('div');
+    gate.id = 'webLoginGate';
+    gate.className = 'web-login-gate';
+    gate.innerHTML = `
+      <div class="wlg-card">
+        <div class="wlg-logo">🛡️</div>
+        <h2>BANNEI MOD LQ</h2>
+        <p>Vui long mo qua <b>Telegram</b> de su dung.<br>Day la ung dung <b>Private</b> — chua public.</p>
+        <div class="wlg-buttons">
+          <a class="wlg-btn primary" href="https://t.me/bannei_mod_lq_bot" target="_blank">🤖 Mo Bot Telegram</a>
+          <a class="wlg-btn ghost" href="https://t.me/Baong19" target="_blank">📬 Lien he Admin</a>
+        </div>
+        <p class="wlg-hint">Neu ban da co link Mini App tu Telegram, hay mo dung link do.</p>
+      </div>
+    `;
+    document.body.appendChild(gate);
+  }
+  gate.style.display = 'flex';
+}
+
+function hideWebLoginGate() {
+  const gate = $('webLoginGate');
+  if (gate) gate.style.display = 'none';
+}
+
 /* ═══════════════════════════════════════════════════════════════
    CATALOG LOADER
    ═══════════════════════════════════════════════════════════════ */
@@ -143,6 +176,38 @@ function showLoader(text) {
   $('loader').hidden = false;
 }
 function hideLoader() { $('loader').hidden = true; }
+
+/* ═══════════════════════════════════════════════════════════════
+   HERO ICON HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+async function loadHeroIcons() {
+  try {
+    const res = await fetch('hero_icons.json?t=' + Date.now());
+    if (res.ok) state.heroIcons = await res.json();
+  } catch {}
+}
+async function loadSkinCodes() {
+  try {
+    const res = await fetch('skin_codes.json?t=' + Date.now());
+    if (res.ok) state.skinCodes = await res.json();
+  } catch {}
+}
+
+function getHeroIconUrl(heroName, skinName) {
+  const cdnId = state.heroIcons[heroName];
+  if (!cdnId) return '';
+  const lookupSkin = skinName || (state.catalog[heroName] && state.catalog[heroName][0]);
+  if (!lookupSkin) return '';
+  const skinCode = state.skinCodes[heroName + '|' + lookupSkin];
+  if (!skinCode) return '';
+  return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + cdnId + skinCode + 'head.jpg';
+}
+
+function heroIconImg(heroName, skinName, cls) {
+  const url = getHeroIconUrl(heroName, skinName);
+  if (!url) return '';
+  return `<img class="${cls || 'hi-avatar'}" src="${url}" alt="" loading="lazy" onerror="this.outerHTML=''">`;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    TABS
@@ -192,7 +257,8 @@ function openLetter(L) {
     const cell = document.createElement('button');
     cell.className = 'hero-cell';
     if (state.cart[f]) cell.classList.add('has-skin');
-    cell.innerHTML = `${escapeHtml(f)}<span class="hc-skins">${skins.length} skin</span>`;
+    const iconHtml = heroIconImg(f, null, 'hc-icon');
+    cell.innerHTML = `${iconHtml}${escapeHtml(f)}<span class="hc-skins">${skins.length} skin</span>`;
     cell.style.animationDelay = `${Math.min(i, 30) * 0.025}s`;
     cell.addEventListener('click', () => openHero(f));
     grid.appendChild(cell);
@@ -215,8 +281,9 @@ function openHero(folder) {
       const cell = document.createElement('button');
       cell.className = 'skin-cell';
       if (state.cart[folder] === s) cell.classList.add('selected');
+      const skIcon = heroIconImg(folder, s, 'sk-icon');
       cell.innerHTML = `
-        <span class="sk-num">${i + 1}</span>
+        ${skIcon ? skIcon : `<span class="sk-num">${i + 1}</span>`}
         <span class="sk-name">${escapeHtml(s)}</span>
         <span class="sk-chev">›</span>
       `;
@@ -296,7 +363,8 @@ function doHeroSearch(qRaw) {
       row.className = 'search-row';
       row.style.animationDelay = `${Math.min(i, 20) * 0.02}s`;
       if (h.type === 'hero') {
-        row.innerHTML = `<div><b>${highlight(h.folder, qRaw)}</b><div class="meta">🎭 Mở danh sách skin</div></div><span class="chev">›</span>`;
+        const srIcon = heroIconImg(h.folder, null, 'sr-icon');
+        row.innerHTML = `${srIcon}<div><b>${highlight(h.folder, qRaw)}</b><div class="meta">🎭 Mở danh sách skin</div></div><span class="chev">›</span>`;
         row.addEventListener('click', () => {
           $('heroSearch').value = '';
           $('heroSearchClr').hidden = true;
@@ -304,7 +372,8 @@ function doHeroSearch(qRaw) {
           openHero(h.folder);
         });
       } else {
-        row.innerHTML = `<div><b>${escapeHtml(h.folder)}</b><div class="meta">${highlight(h.skin, qRaw)}</div></div><span class="chev">+</span>`;
+        const srIcon2 = heroIconImg(h.folder, h.skin, 'sr-icon');
+        row.innerHTML = `${srIcon2}<div><b>${escapeHtml(h.folder)}</b><div class="meta">${highlight(h.skin, qRaw)}</div></div><span class="chev">+</span>`;
         row.addEventListener('click', () => {
           state.cart[h.folder] = h.skin;
           saveCart();
@@ -452,8 +521,11 @@ function renderCart() {
     const div = document.createElement('div');
     div.className = 'cart-item' + (isExtra ? ' extra' : '');
     div.style.animationDelay = `${Math.min(i, 15) * 0.04}s`;
+    const cartIconHtml = isExtra
+      ? '<div class="cart-icon">🛠️</div>'
+      : (heroIconImg(k, v, 'cart-avatar') || '<div class="cart-icon">🎭</div>');
     div.innerHTML = `
-      <div class="cart-icon">${isExtra ? '🛠️' : '🎭'}</div>
+      ${cartIconHtml}
       <div>
         <div class="cart-name">${escapeHtml(k)}</div>
         <div class="cart-source">${escapeHtml(v)}</div>
@@ -555,17 +627,17 @@ function showRunOverlay(itemCount) {
     setTimeout(tick, 1100 + Math.random() * 600);
   };
   setTimeout(tick, 450);
-
-  state.cart = {};
-  saveCart();
-  updateBadge();
-  renderCart();
-  syncExtraCardsState();
 }
 
 $('runClose').addEventListener('click', () => {
   haptic('light');
   $('runOverlay').hidden = true;
+  // Only clear cart when user confirms they're done
+  state.cart = {};
+  saveCart();
+  updateBadge();
+  renderCart();
+  syncExtraCardsState();
   setTimeout(() => tg?.close?.(), 180);
 });
 
@@ -721,13 +793,33 @@ function copyText(t) {
    UTIL
    ═══════════════════════════════════════════════════════════════ */
 function saveCart() {
-  try { localStorage.setItem('bannei_cart', JSON.stringify(state.cart)); } catch {}
+  const raw = JSON.stringify(state.cart);
+  try { localStorage.setItem('bannei_cart', raw); } catch {}
+  // Sync to Telegram CloudStorage (cross-device, cross-session)
+  if (tg?.CloudStorage) {
+    try { tg.CloudStorage.setItem('bannei_cart', raw); } catch {}
+  }
 }
-function loadCartLocal() {
+async function loadCartLocal() {
+  // 1) CloudStorage (Telegram cloud, cross-device)
+  if (tg?.CloudStorage) {
+    try {
+      const raw = await promisifyCS(tg.CloudStorage.getItem, 'bannei_cart');
+      if (raw) { state.cart = JSON.parse(raw) || {}; updateBadge(); syncExtraCardsState(); return; }
+    } catch {}
+  }
+  // 2) localStorage fallback
   try {
     const v = localStorage.getItem('bannei_cart');
-    if (v) state.cart = JSON.parse(v) || {};
+    if (v) { state.cart = JSON.parse(v) || {}; updateBadge(); syncExtraCardsState(); }
   } catch {}
+}
+function promisifyCS(fn, key) {
+  return new Promise((resolve) => {
+    fn.call(tg.CloudStorage, key, (err, val) => {
+      resolve(err ? null : val);
+    });
+  });
 }
 function updateBadge() {
   const n = Object.keys(state.cart).length;
@@ -807,14 +899,25 @@ tg?.onEvent?.('themeChanged', applyTheme);
 /* ═══════════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════════ */
-loginTelegram();
-loadCartLocal();
-updateBadge();
-syncExtraCardsState();
-bindAdminButtons();
-refreshSettingsLabels();
-applyTheme();
-loadCatalog();
+(async function boot() {
+  loginTelegram();
+  await loadCartLocal();
+  updateBadge();
+  syncExtraCardsState();
+  bindAdminButtons();
+  refreshSettingsLabels();
+  applyTheme();
+  await Promise.all([loadCatalog(), loadHeroIcons(), loadSkinCodes()]);
+
+  // sync cart from Telegram bot when inside Telegram
+  if (tg?.initDataUnsafe?.user) {
+    try {
+      tg.sendData(JSON.stringify({ type: 'synccart', ts: Date.now() }));
+    } catch (e) {
+      // silent — synccart will show reply in chat
+    }
+  }
+})();
 
 /* Telegram BackButton — auto handle */
 function refreshBack() {

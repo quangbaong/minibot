@@ -1,0 +1,498 @@
+{
+  "_note": "Fill cdn_id for each hero. URL: {cdn_id}{prefix}head.jpg (portrait) or {cdn_id}{skin_code}head.jpg (skin)",
+  "_known": {
+    "Nakroth": "30"
+  },
+  "Airi": {
+    "cdn_id": "",
+    "prefix": "130"
+  },
+  "Aleister": {
+    "cdn_id": "",
+    "prefix": "156"
+  },
+  "Alice": {
+    "cdn_id": "",
+    "prefix": "118"
+  },
+  "Allain": {
+    "cdn_id": "",
+    "prefix": "537"
+  },
+  "Amily": {
+    "cdn_id": "",
+    "prefix": "193"
+  },
+  "Annette": {
+    "cdn_id": "",
+    "prefix": "519"
+  },
+  "Aoi": {
+    "cdn_id": "",
+    "prefix": "536"
+  },
+  "Arduin": {
+    "cdn_id": "",
+    "prefix": "126"
+  },
+  "Arthur": {
+    "cdn_id": "",
+    "prefix": "166"
+  },
+  "Arum": {
+    "cdn_id": "",
+    "prefix": "187"
+  },
+  "Astrid": {
+    "cdn_id": "",
+    "prefix": "502"
+  },
+  "Ata": {
+    "cdn_id": "",
+    "prefix": "511"
+  },
+  "Aya": {
+    "cdn_id": "",
+    "prefix": "543"
+  },
+  "Azzen'Ka": {
+    "cdn_id": "",
+    "prefix": "127"
+  },
+  "Baldum": {
+    "cdn_id": "",
+    "prefix": "505"
+  },
+  "Bijan": {
+    "cdn_id": "",
+    "prefix": "548"
+  },
+  "Billow": {
+    "cdn_id": "",
+    "prefix": "599"
+  },
+  "Biron": {
+    "cdn_id": "",
+    "prefix": "597"
+  },
+  "Bolt Baron": {
+    "cdn_id": "",
+    "prefix": "598"
+  },
+  "Bonnie": {
+    "cdn_id": "",
+    "prefix": "541"
+  },
+  "Bright": {
+    "cdn_id": "",
+    "prefix": "540"
+  },
+  "Butterfly": {
+    "cdn_id": "",
+    "prefix": "116"
+  },
+  "Capheny": {
+    "cdn_id": "",
+    "prefix": "524"
+  },
+  "Celica": {
+    "cdn_id": "",
+    "prefix": "192"
+  },
+  "Charlotte": {
+    "cdn_id": "",
+    "prefix": "206"
+  },
+  "Chaugnar": {
+    "cdn_id": "",
+    "prefix": "113"
+  },
+  "Cresht": {
+    "cdn_id": "",
+    "prefix": "171"
+  },
+  "D'Arcy": {
+    "cdn_id": "",
+    "prefix": "523"
+  },
+  "Dextra": {
+    "cdn_id": "",
+    "prefix": "534"
+  },
+  "Dirak": {
+    "cdn_id": "",
+    "prefix": "530"
+  },
+  "EX": {
+    "cdn_id": "",
+    "prefix": "159"
+  },
+  "Eland'orr": {
+    "cdn_id": "",
+    "prefix": "199"
+  },
+  "Elsu": {
+    "cdn_id": "",
+    "prefix": "196"
+  },
+  "Enzo": {
+    "cdn_id": "",
+    "prefix": "195"
+  },
+  "Erin": {
+    "cdn_id": "",
+    "prefix": "567"
+  },
+  "Errol": {
+    "cdn_id": "",
+    "prefix": "522"
+  },
+  "Fennik": {
+    "cdn_id": "",
+    "prefix": "173"
+  },
+  "Florentino": {
+    "cdn_id": "",
+    "prefix": "521"
+  },
+  "Gildur": {
+    "cdn_id": "",
+    "prefix": "108"
+  },
+  "Goverra": {
+    "cdn_id": "",
+    "prefix": "596"
+  },
+  "Grakk": {
+    "cdn_id": "",
+    "prefix": "175"
+  },
+  "Hayate": {
+    "cdn_id": "",
+    "prefix": "132"
+  },
+  "Heino": {
+    "cdn_id": "",
+    "prefix": "563"
+  },
+  "Helen": {
+    "cdn_id": "",
+    "prefix": "184"
+  },
+  "Iggy": {
+    "cdn_id": "",
+    "prefix": "538"
+  },
+  "Ignis": {
+    "cdn_id": "",
+    "prefix": "124"
+  },
+  "Ilumia": {
+    "cdn_id": "",
+    "prefix": "136"
+  },
+  "Ishar": {
+    "cdn_id": "",
+    "prefix": "526"
+  },
+  "Jinna": {
+    "cdn_id": "",
+    "prefix": "115"
+  },
+  "Kahlii": {
+    "cdn_id": "",
+    "prefix": "110"
+  },
+  "Kaine": {
+    "cdn_id": "",
+    "prefix": "153"
+  },
+  "Keera": {
+    "cdn_id": "",
+    "prefix": "531"
+  },
+  "Kil'Groth": {
+    "cdn_id": "",
+    "prefix": "139"
+  },
+  "Kriknak": {
+    "cdn_id": "",
+    "prefix": "162"
+  },
+  "Krixi": {
+    "cdn_id": "",
+    "prefix": "106"
+  },
+  "Krizzix": {
+    "cdn_id": "",
+    "prefix": "189"
+  },
+  "Lauriel": {
+    "cdn_id": "",
+    "prefix": "141"
+  },
+  "Laville": {
+    "cdn_id": "",
+    "prefix": "533"
+  },
+  "Liliana": {
+    "cdn_id": "",
+    "prefix": "510"
+  },
+  "Lindis": {
+    "cdn_id": "",
+    "prefix": "177"
+  },
+  "Lorion": {
+    "cdn_id": "",
+    "prefix": "539"
+  },
+  "Lumburr": {
+    "cdn_id": "",
+    "prefix": "168"
+  },
+  "Lữ Bố": {
+    "cdn_id": "",
+    "prefix": "128"
+  },
+  "Maloch": {
+    "cdn_id": "",
+    "prefix": "123"
+  },
+  "Marja": {
+    "cdn_id": "",
+    "prefix": "121"
+  },
+  "Max": {
+    "cdn_id": "",
+    "prefix": "180"
+  },
+  "Mganga": {
+    "cdn_id": "",
+    "prefix": "119"
+  },
+  "Mina": {
+    "cdn_id": "",
+    "prefix": "120"
+  },
+  "Ming": {
+    "cdn_id": "",
+    "prefix": "568"
+  },
+  "Moren": {
+    "cdn_id": "",
+    "prefix": "170"
+  },
+  "Murad": {
+    "cdn_id": "",
+    "prefix": "131"
+  },
+  "Nakroth": {
+    "cdn_id": "30",
+    "prefix": "150"
+  },
+  "Natalya": {
+    "cdn_id": "",
+    "prefix": "142"
+  },
+  "Ngộ Không": {
+    "cdn_id": "",
+    "prefix": "167"
+  },
+  "Omega": {
+    "cdn_id": "",
+    "prefix": "114"
+  },
+  "Omen": {
+    "cdn_id": "",
+    "prefix": "506"
+  },
+  "Ormarr": {
+    "cdn_id": "",
+    "prefix": "117"
+  },
+  "Paine": {
+    "cdn_id": "",
+    "prefix": "137"
+  },
+  "Preyta": {
+    "cdn_id": "",
+    "prefix": "148"
+  },
+  "Qi": {
+    "cdn_id": "",
+    "prefix": "528"
+  },
+  "Quillen": {
+    "cdn_id": "",
+    "prefix": "518"
+  },
+  "Raz": {
+    "cdn_id": "",
+    "prefix": "157"
+  },
+  "Richter": {
+    "cdn_id": "",
+    "prefix": "515"
+  },
+  "Rouie": {
+    "cdn_id": "",
+    "prefix": "191"
+  },
+  "Rourke": {
+    "cdn_id": "",
+    "prefix": "512"
+  },
+  "Roxie": {
+    "cdn_id": "",
+    "prefix": "514"
+  },
+  "Ryoma": {
+    "cdn_id": "",
+    "prefix": "163"
+  },
+  "Sephera": {
+    "cdn_id": "",
+    "prefix": "527"
+  },
+  "Sinestrea": {
+    "cdn_id": "",
+    "prefix": "535"
+  },
+  "Skud": {
+    "cdn_id": "",
+    "prefix": "134"
+  },
+  "Slimz": {
+    "cdn_id": "",
+    "prefix": "169"
+  },
+  "Stuart": {
+    "cdn_id": "",
+    "prefix": "174"
+  },
+  "Superman": {
+    "cdn_id": "",
+    "prefix": "140"
+  },
+  "Taara": {
+    "cdn_id": "",
+    "prefix": "144"
+  },
+  "Tachi": {
+    "cdn_id": "",
+    "prefix": "542"
+  },
+  "TeeMee": {
+    "cdn_id": "",
+    "prefix": "186"
+  },
+  "Teeri": {
+    "cdn_id": "",
+    "prefix": "546"
+  },
+  "Tel'Annas": {
+    "cdn_id": "",
+    "prefix": "501"
+  },
+  "Thane": {
+    "cdn_id": "",
+    "prefix": "135"
+  },
+  "The Flash": {
+    "cdn_id": "",
+    "prefix": "507"
+  },
+  "Thorne": {
+    "cdn_id": "",
+    "prefix": "532"
+  },
+  "Toro": {
+    "cdn_id": "",
+    "prefix": "105"
+  },
+  "Triệu Vân": {
+    "cdn_id": "",
+    "prefix": "129"
+  },
+  "Tulen": {
+    "cdn_id": "",
+    "prefix": "190"
+  },
+  "Valhein": {
+    "cdn_id": "",
+    "prefix": "133"
+  },
+  "Veera": {
+    "cdn_id": "",
+    "prefix": "109"
+  },
+  "Veres": {
+    "cdn_id": "",
+    "prefix": "520"
+  },
+  "Violet": {
+    "cdn_id": "",
+    "prefix": "111"
+  },
+  "Volkath": {
+    "cdn_id": "",
+    "prefix": "529"
+  },
+  "Wisp": {
+    "cdn_id": "",
+    "prefix": "508"
+  },
+  "Wonder Woman": {
+    "cdn_id": "",
+    "prefix": "504"
+  },
+  "Xeniel": {
+    "cdn_id": "",
+    "prefix": "149"
+  },
+  "Y'bneth": {
+    "cdn_id": "",
+    "prefix": "509"
+  },
+  "Yan": {
+    "cdn_id": "",
+    "prefix": "544"
+  },
+  "Yena": {
+    "cdn_id": "",
+    "prefix": "154"
+  },
+  "Yorn": {
+    "cdn_id": "",
+    "prefix": "112"
+  },
+  "Yue": {
+    "cdn_id": "",
+    "prefix": "545"
+  },
+  "Zata": {
+    "cdn_id": "",
+    "prefix": "513"
+  },
+  "Zephys": {
+    "cdn_id": "",
+    "prefix": "107"
+  },
+  "Zill": {
+    "cdn_id": "",
+    "prefix": "146"
+  },
+  "Zip": {
+    "cdn_id": "",
+    "prefix": "525"
+  },
+  "Zuka": {
+    "cdn_id": "",
+    "prefix": "503"
+  },
+  "Điêu Thuyền": {
+    "cdn_id": "",
+    "prefix": "152"
+  }
+}
