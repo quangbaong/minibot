@@ -1,80 +1,135 @@
-/* BANNEI MOD LQ — Telegram Mini App */
+/* ═══════════════════════════════════════════════════════════════
+   BANNEI MOD LQ — LIQUID GLASS 6.0 · app.js
+   ═══════════════════════════════════════════════════════════════ */
+
 const tg = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); tg.enableClosingConfirmation?.(); }
+if (tg) {
+  tg.ready();
+  tg.expand();
+  tg.enableClosingConfirmation?.();
+  try { tg.setHeaderColor?.('secondary_bg_color'); } catch {}
+  try { tg.setBackgroundColor?.('#07080d'); } catch {}
+}
 
 const ADMIN_ID = 2056107378;
+const ADMIN_CONTACT = 'https://t.me/Baong19';
 
+/* ── selectors ── */
 const $ = (id) => document.getElementById(id);
-const qsa = (s, r=document) => [...r.querySelectorAll(s)];
+const qsa = (s, r = document) => [...r.querySelectorAll(s)];
 
+/* ── state ── */
 const state = {
   catalog: {},
   cart: {},
   currentLetter: null,
   currentHero: null,
+  isAdmin: false,
+  isVip: false,
+  vipDays: 0,
+  totalHeroes: 0,
+  totalSkins: 0,
+  settings: loadSettings(),
 };
 
 const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'MOD ROV', 'Máy Yếu', 'Nút Bấm']);
 
-/* ───────────────────────── TELEGRAM LOGIN ───────────────────────── */
+const NUTBAM_LIST = [
+  { id: '10620', name: 'Krixi Phù Thủy Thời Không', emoji: '🎭' },
+  { id: '14111', name: 'Lau Thứ Nguyên Vệ Thần',     emoji: '🛡️' },
+  { id: '15012', name: 'Nak Killua',                  emoji: '⚡' },
+  { id: '13118', name: 'Murad Thiên Luân',            emoji: '🏯' },
+  { id: '15015', name: 'Nak Bạch Diện',               emoji: '🎭' },
+  { id: '59901', name: 'Billow Chuyển Giao',          emoji: '🛡️' },
+  { id: '54307', name: 'Aya Công Chúa Cầu Vồng',      emoji: '⚡' },
+  { id: '15412', name: 'Yena Huyền Cửu Thiên',        emoji: '🏯' },
+  { id: '13570', name: 'Anna Clara',                  emoji: '🎭' },
+  { id: '13571', name: 'dddontfall',                  emoji: '🛡️' },
+  { id: '13572', name: 'Tiktok: chenyao',             emoji: '⚡' },
+  { id: '13573', name: 'Hinna',                       emoji: '🏯' },
+  { id: '13574', name: 'Chương Nhược Nam',            emoji: '🎭' },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   TELEGRAM LOGIN + VIP / ADMIN DETECTION
+   ═══════════════════════════════════════════════════════════════ */
 function loginTelegram() {
   const u = tg?.initDataUnsafe?.user;
   if (!u) {
-    $('userName').textContent = 'Khách (mở qua Telegram)';
+    $('userName').textContent = 'Mở qua Telegram';
     $('userId').textContent = 'Chưa đăng nhập';
     $('avatar').textContent = '?';
     $('vipText').textContent = 'N/A';
     $('vipPill').classList.add('none');
     return;
   }
+
   const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'User';
   $('userName').textContent = name;
   $('userId').textContent = `ID: ${u.id}`;
+  $('myidVal').textContent = u.id;
+
   if (u.photo_url) {
     $('avatar').innerHTML = `<img src="${u.photo_url}" alt="">`;
   } else {
     $('avatar').textContent = (u.first_name || '?')[0].toUpperCase();
   }
 
-  // VIP check: parse start_param (vip:<days_left>) if bot passed it
-  const sp = tg.initDataUnsafe?.start_param || '';
-  if (sp.startsWith('vip:')) {
-    const days = parseInt(sp.slice(4), 10);
+  // parse start_param: vip:<days> | admin:1 | vip:<days>+admin:1
+  // Source priority: Telegram start_param → URL query (?s=...) → empty
+  const urlParams = new URLSearchParams(location.search);
+  const sp =
+    tg.initDataUnsafe?.start_param ||
+    urlParams.get('s') ||
+    urlParams.get('start_param') ||
+    urlParams.get('tgWebAppStartParam') ||
+    '';
+  const vipMatch = /vip:(\d+)/.exec(sp);
+  if (vipMatch) {
+    const days = parseInt(vipMatch[1], 10);
+    state.vipDays = days;
     if (days > 0) {
-      $('vipText').textContent = `VIP ${days} ngày`;
-      $('vipPill').classList.remove('none','expired');
+      state.isVip = true;
+      $('vipText').textContent = `VIP · ${days} ngày`;
+      $('vipPill').className = 'vip-pill';
     } else {
       $('vipText').textContent = 'VIP hết hạn';
-      $('vipPill').classList.add('expired');
+      $('vipPill').className = 'vip-pill expired';
     }
   } else {
     $('vipText').textContent = 'Free';
-    $('vipPill').classList.add('none');
+    $('vipPill').className = 'vip-pill none';
   }
 
-  // Show admin tab if user is admin
-  if (u.id === ADMIN_ID) {
-    qsa('.admin-only').forEach(el => el.hidden = false);
-    document.querySelector('.tabs')?.classList.add('with-admin');
+  // admin detection: by ID OR start_param flag
+  const isAdminParam = /admin:1/.test(sp);
+  if (u.id === ADMIN_ID || isAdminParam) {
+    state.isAdmin = true;
+    qsa('.admin-only').forEach((el) => (el.hidden = false));
+    $('tabsBar').classList.add('with-admin');
     $('vipText').textContent = '👑 ADMIN';
-    $('vipPill').classList.remove('none','expired');
-    $('vipPill').style.background = 'linear-gradient(135deg,rgba(255,210,95,.3),rgba(255,107,154,.2))';
-    $('vipPill').style.color = '#ffd25f';
-    $('vipPill').style.borderColor = 'rgba(255,210,95,.5)';
+    $('vipPill').className = 'vip-pill admin';
   }
 }
 
-/* ───────────────────────── CATALOG ───────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   CATALOG LOADER
+   ═══════════════════════════════════════════════════════════════ */
 async function loadCatalog() {
-  $('loader').hidden = false;
-  $('loaderText').textContent = 'Đang tải catalog…';
+  showLoader('Đang tải catalog…');
   try {
     const res = await fetch('catalog.json?t=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     state.catalog = await res.json();
-    const n = Object.keys(state.catalog).length;
-    if (!n) throw new Error('catalog rỗng');
-    $('loader').hidden = true;
+    const folders = Object.keys(state.catalog);
+    if (!folders.length) throw new Error('catalog rỗng');
+
+    state.totalHeroes = folders.length;
+    state.totalSkins = folders.reduce((n, f) => n + (state.catalog[f]?.length || 0), 0);
+    $('stHeroes').textContent = state.totalHeroes;
+    $('stSkins').textContent = state.totalSkins;
+
+    hideLoader();
     renderAlphabet();
   } catch (e) {
     $('loaderText').innerHTML =
@@ -83,27 +138,40 @@ async function loadCatalog() {
   }
 }
 
-/* ───────────────────────── TABS ───────────────────────── */
-qsa('.tab').forEach(btn => {
+function showLoader(text) {
+  $('loaderText').textContent = text;
+  $('loader').hidden = false;
+}
+function hideLoader() { $('loader').hidden = true; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TABS
+   ═══════════════════════════════════════════════════════════════ */
+qsa('.tab').forEach((btn) => {
   btn.addEventListener('click', () => {
     const tab = btn.dataset.tab;
-    qsa('.tab').forEach(b => b.classList.toggle('active', b === btn));
-    qsa('.page').forEach(p => p.classList.toggle('active', p.id === `page-${tab}`));
+    qsa('.tab').forEach((b) => b.classList.toggle('active', b === btn));
+    qsa('.page').forEach((p) => p.classList.toggle('active', p.id === `page-${tab}`));
     haptic('light');
     if (tab === 'cart') renderCart();
+    if (tab === 'more') refreshSettingsLabels();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
 
-/* ───────────────────────── HEROES PAGE ───────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   ALPHA / HERO / SKIN PAGES
+   ═══════════════════════════════════════════════════════════════ */
 function renderAlphabet() {
   const folders = Object.keys(state.catalog);
-  const letters = [...new Set(folders.map(f => f[0].toUpperCase()))].sort();
+  const letters = [...new Set(folders.map((f) => f[0].toUpperCase()))].sort();
   const grid = $('alphaGrid');
   grid.innerHTML = '';
-  letters.forEach(L => {
+  letters.forEach((L) => {
+    const count = folders.filter((f) => f[0].toUpperCase() === L).length;
     const cell = document.createElement('button');
     cell.className = 'alpha-cell';
-    cell.textContent = L;
+    cell.innerHTML = `${L}<span class="ac-count">${count}</span>`;
     cell.addEventListener('click', () => openLetter(L));
     grid.appendChild(cell);
   });
@@ -113,71 +181,148 @@ function openLetter(L) {
   state.currentLetter = L;
   haptic('medium');
   const folders = Object.keys(state.catalog)
-    .filter(f => f[0].toUpperCase() === L).sort();
-  $('heroListTitle').textContent = `Tướng bắt đầu bằng "${L}"`;
+    .filter((f) => f[0].toUpperCase() === L)
+    .sort();
+  $('heroListTitle').textContent = `Chữ "${L}"`;
+  $('heroListSub').textContent = `${folders.length} tướng`;
   const grid = $('heroGrid');
   grid.innerHTML = '';
   folders.forEach((f, i) => {
+    const skins = state.catalog[f] || [];
     const cell = document.createElement('button');
     cell.className = 'hero-cell';
-    cell.textContent = f;
-    cell.style.animationDelay = `${i * 0.025}s`;
+    if (state.cart[f]) cell.classList.add('has-skin');
+    cell.innerHTML = `${escapeHtml(f)}<span class="hc-skins">${skins.length} skin</span>`;
+    cell.style.animationDelay = `${Math.min(i, 30) * 0.025}s`;
     cell.addEventListener('click', () => openHero(f));
     grid.appendChild(cell);
   });
-  $('alphaGrid').hidden = true;
-  $('heroListWrap').hidden = false;
-  $('skinListWrap').hidden = true;
+  switchHeroesPane('list');
 }
-
-$('heroBack').addEventListener('click', () => {
-  $('alphaGrid').hidden = false;
-  $('heroListWrap').hidden = true;
-  haptic('light');
-});
 
 function openHero(folder) {
   state.currentHero = folder;
   haptic('medium');
   const skins = state.catalog[folder] || [];
-  $('skinListTitle').textContent = `${folder} — Chọn skin`;
+  $('skinListTitle').textContent = folder;
+  $('skinListSub').textContent = skins.length ? `${skins.length} skin có sẵn` : 'Chưa có skin';
   const grid = $('skinGrid');
   grid.innerHTML = '';
   if (!skins.length) {
-    grid.innerHTML = `<div class="empty"><p>Tướng này chưa có skin.</p></div>`;
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">🎭</div><p>Tướng này chưa có skin trong catalog.</p></div>`;
   } else {
     skins.forEach((s, i) => {
       const cell = document.createElement('button');
       cell.className = 'skin-cell';
       if (state.cart[folder] === s) cell.classList.add('selected');
-      cell.innerHTML = `<span>${escapeHtml(s)}</span>`;
-      cell.style.animationDelay = `${i * 0.03}s`;
+      cell.innerHTML = `
+        <span class="sk-num">${i + 1}</span>
+        <span class="sk-name">${escapeHtml(s)}</span>
+        <span class="sk-chev">›</span>
+      `;
+      cell.style.animationDelay = `${Math.min(i, 20) * 0.03}s`;
       cell.addEventListener('click', () => pickSkin(folder, s, cell));
       grid.appendChild(cell);
     });
   }
-  $('heroListWrap').hidden = true;
-  $('skinListWrap').hidden = false;
+  switchHeroesPane('skin');
 }
 
-$('skinBack').addEventListener('click', () => {
-  $('heroListWrap').hidden = false;
-  $('skinListWrap').hidden = true;
-  haptic('light');
-});
+function switchHeroesPane(which) {
+  $('alphaPane').hidden = which !== 'alpha';
+  $('heroListPane').hidden = which !== 'list';
+  $('skinListPane').hidden = which !== 'skin';
+}
+
+$('heroBack').addEventListener('click', () => { switchHeroesPane('alpha'); haptic('light'); });
+$('skinBack').addEventListener('click', () => { switchHeroesPane('list'); haptic('light'); });
 
 function pickSkin(folder, skin, cellEl) {
   state.cart[folder] = skin;
   saveCart();
-  qsa('.skin-cell', $('skinGrid')).forEach(c => c.classList.remove('selected'));
+  qsa('.skin-cell', $('skinGrid')).forEach((c) => c.classList.remove('selected'));
   cellEl.classList.add('selected');
   haptic('success');
-  toast(`✓ ${folder}: ${shorten(skin, 26)}`, 'success');
+  toast(`✓ ${folder} → ${shorten(skin, 26)}`, 'success');
   updateBadge();
 }
 
-/* ───────────────────────── EXTRAS PAGE ───────────────────────── */
-qsa('.extra-card').forEach(card => {
+/* ═══════════════════════════════════════════════════════════════
+   HERO/SKIN SEARCH (heroes page)
+   ═══════════════════════════════════════════════════════════════ */
+let searchDebounce = 0;
+$('heroSearch').addEventListener('input', (e) => {
+  const q = e.target.value.trim();
+  $('heroSearchClr').hidden = !q;
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => doHeroSearch(q), 180);
+});
+$('heroSearchClr').addEventListener('click', () => {
+  $('heroSearch').value = '';
+  $('heroSearchClr').hidden = true;
+  doHeroSearch('');
+});
+
+function doHeroSearch(qRaw) {
+  const wrap = $('heroSearchResults');
+  if (qRaw.length < 2) {
+    wrap.hidden = true;
+    wrap.innerHTML = '';
+    $('alphaGrid').hidden = false;
+    return;
+  }
+  $('alphaGrid').hidden = true;
+  const q = qRaw.toLowerCase();
+  const hits = [];
+  for (const [folder, skins] of Object.entries(state.catalog)) {
+    const folderHit = folder.toLowerCase().includes(q);
+    if (folderHit) {
+      hits.push({ type: 'hero', folder });
+    }
+    for (const s of skins) {
+      if (s.toLowerCase().includes(q)) {
+        hits.push({ type: 'skin', folder, skin: s });
+      }
+      if (hits.length > 60) break;
+    }
+    if (hits.length > 60) break;
+  }
+  wrap.innerHTML = '';
+  if (!hits.length) {
+    wrap.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><p>Không tìm thấy "<b>${escapeHtml(qRaw)}</b>"</p></div>`;
+  } else {
+    hits.slice(0, 50).forEach((h, i) => {
+      const row = document.createElement('div');
+      row.className = 'search-row';
+      row.style.animationDelay = `${Math.min(i, 20) * 0.02}s`;
+      if (h.type === 'hero') {
+        row.innerHTML = `<div><b>${highlight(h.folder, qRaw)}</b><div class="meta">🎭 Mở danh sách skin</div></div><span class="chev">›</span>`;
+        row.addEventListener('click', () => {
+          $('heroSearch').value = '';
+          $('heroSearchClr').hidden = true;
+          doHeroSearch('');
+          openHero(h.folder);
+        });
+      } else {
+        row.innerHTML = `<div><b>${escapeHtml(h.folder)}</b><div class="meta">${highlight(h.skin, qRaw)}</div></div><span class="chev">+</span>`;
+        row.addEventListener('click', () => {
+          state.cart[h.folder] = h.skin;
+          saveCart();
+          updateBadge();
+          haptic('success');
+          toast(`✓ ${h.folder} → ${shorten(h.skin, 22)}`, 'success');
+        });
+      }
+      wrap.appendChild(row);
+    });
+  }
+  wrap.hidden = false;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EXTRAS
+   ═══════════════════════════════════════════════════════════════ */
+qsa('.extra-card').forEach((card) => {
   card.addEventListener('click', () => {
     const e = card.dataset.extra;
     haptic('medium');
@@ -185,6 +330,7 @@ qsa('.extra-card').forEach(card => {
     if (e === 'hdchieu') return toggleExtra('HD Chiêu', 'HD', card);
     if (e === 'modrov')  return toggleExtra('MOD ROV', 'rov', card);
     if (e === 'mayyeu')  return toggleExtra('Máy Yếu', 'mayyeu', card);
+    if (e === 'nutbam')  return openNutbamPicker();
   });
 });
 
@@ -203,6 +349,16 @@ function toggleExtra(key, source, cardEl) {
   updateBadge();
 }
 
+function syncExtraCardsState() {
+  qsa('.extra-card').forEach((c) => {
+    const e = c.dataset.extra;
+    const key = ({
+      camxa: 'Cam Xa', hdchieu: 'HD Chiêu', modrov: 'MOD ROV', mayyeu: 'Máy Yếu', nutbam: 'Nút Bấm',
+    })[e];
+    c.classList.toggle('selected', !!state.cart[key]);
+  });
+}
+
 function openZoomPicker() {
   const grid = $('zoomGrid');
   grid.innerHTML = '';
@@ -211,63 +367,103 @@ function openZoomPicker() {
     const b = document.createElement('button');
     b.className = 'zoom-cell';
     b.textContent = `${z}%`;
-    b.style.animationDelay = `${(i++) * 0.012}s`;
+    if (state.cart['Cam Xa'] === `${z}%`) b.classList.add('selected');
+    b.style.animationDelay = `${i++ * 0.012}s`;
     b.addEventListener('click', () => {
       state.cart['Cam Xa'] = `${z}%`;
       saveCart();
       haptic('success');
       toast(`✓ Cam Xa ${z}%`, 'success');
-      // mark card selected
-      qsa('.extra-card').forEach(c => {
-        if (c.dataset.extra === 'camxa') c.classList.add('selected');
-      });
-      $('zoomPicker').hidden = true;
-      $('extrasList')?.removeAttribute('hidden');
-      qsa('.extras-list')[0].style.display = '';
+      syncExtraCardsState();
+      switchExtrasPane('list');
       updateBadge();
     });
     grid.appendChild(b);
   }
-  qsa('.extras-list')[0].style.display = 'none';
-  $('zoomPicker').hidden = false;
+  switchExtrasPane('zoom');
 }
 
-$('zoomBack').addEventListener('click', () => {
-  $('zoomPicker').hidden = true;
-  qsa('.extras-list')[0].style.display = '';
-  haptic('light');
-});
+function openNutbamPicker() {
+  const list = $('nutbamList');
+  list.innerHTML = '';
+  NUTBAM_LIST.forEach((n, i) => {
+    const row = document.createElement('button');
+    row.className = 'nut-cell';
+    if (state.cart['Nút Bấm'] === `nut${n.id}`) row.classList.add('selected');
+    row.innerHTML = `
+      <span class="nc-emoji">${n.emoji}</span>
+      <div>
+        <div>${escapeHtml(n.name)}</div>
+        <div class="nc-id">ID: ${n.id}</div>
+      </div>
+      <span style="color:var(--tg-hint);font-size:20px">›</span>
+    `;
+    row.style.animationDelay = `${i * 0.03}s`;
+    row.addEventListener('click', () => {
+      state.cart['Nút Bấm'] = `nut${n.id}`;
+      saveCart();
+      haptic('success');
+      toast(`✓ Nút bấm ${n.name}`, 'success');
+      syncExtraCardsState();
+      switchExtrasPane('list');
+      updateBadge();
+    });
+    list.appendChild(row);
+  });
+  switchExtrasPane('nut');
+}
 
-/* ───────────────────────── CART PAGE ───────────────────────── */
+function switchExtrasPane(which) {
+  $('extrasPane').hidden = which !== 'list';
+  $('zoomPicker').hidden = which !== 'zoom';
+  $('nutbamPicker').hidden = which !== 'nut';
+}
+
+$('zoomBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
+$('nutbamBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
+
+/* ═══════════════════════════════════════════════════════════════
+   CART
+   ═══════════════════════════════════════════════════════════════ */
 function renderCart() {
   const list = $('cartList');
   const empty = $('cartEmpty');
-  const actions = $('cartActions');
+  const summaryWrap = $('cartSummaryWrap');
   const entries = Object.entries(state.cart);
   list.innerHTML = '';
+
   if (!entries.length) {
     empty.hidden = false;
-    actions.hidden = true;
+    summaryWrap.hidden = true;
     return;
   }
   empty.hidden = true;
-  actions.hidden = false;
+  summaryWrap.hidden = false;
+
+  // summary
+  const heroCount = entries.filter(([k]) => !EXTRA_KEYS.has(k)).length;
+  const extraCount = entries.length - heroCount;
+  $('csVal').textContent = entries.length;
+  $('csMeta').textContent = `${heroCount} Skin · ${extraCount} Bổ trợ`;
+  $('csVipBadge').hidden = !state.isVip;
+
   entries.forEach(([k, v], i) => {
     const isExtra = EXTRA_KEYS.has(k);
     const div = document.createElement('div');
     div.className = 'cart-item' + (isExtra ? ' extra' : '');
-    div.style.animationDelay = `${i * 0.04}s`;
+    div.style.animationDelay = `${Math.min(i, 15) * 0.04}s`;
     div.innerHTML = `
       <div class="cart-icon">${isExtra ? '🛠️' : '🎭'}</div>
       <div>
         <div class="cart-name">${escapeHtml(k)}</div>
         <div class="cart-source">${escapeHtml(v)}</div>
       </div>
-      <button class="cart-del" data-key="${escapeAttr(k)}">✕</button>
+      <button class="cart-del" data-key="${escapeAttr(k)}" aria-label="Remove">✕</button>
     `;
     list.appendChild(div);
   });
-  qsa('.cart-del', list).forEach(b => {
+
+  qsa('.cart-del', list).forEach((b) => {
     b.addEventListener('click', () => {
       const key = b.dataset.key;
       const item = b.closest('.cart-item');
@@ -278,7 +474,8 @@ function renderCart() {
         saveCart();
         updateBadge();
         renderCart();
-      }, 280);
+        syncExtraCardsState();
+      }, 300);
     });
   });
 }
@@ -290,22 +487,32 @@ $('clearBtn').addEventListener('click', () => {
   saveCart();
   updateBadge();
   renderCart();
+  syncExtraCardsState();
   haptic('warning');
   toast('🧹 Đã xoá sạch giỏ', 'success');
 });
 
 $('runBtn').addEventListener('click', () => {
   const entries = Object.entries(state.cart);
-  if (!entries.length) { toast('Giỏ trống!', 'error'); return; }
+  if (!entries.length) { toast('Giỏ trống!', 'error'); haptic('error'); return; }
   if (!tg) { toast('Cần mở qua Telegram!', 'error'); return; }
 
+  // validation: Cam Xa only — must have ≥1 skin
+  const onlyExtras = entries.every(([k]) => EXTRA_KEYS.has(k));
+  const hasSkin = entries.some(([k]) => !EXTRA_KEYS.has(k));
+  if (state.cart['Cam Xa'] && !hasSkin && onlyExtras) {
+    if (!confirm('⚠️ Cam Xa cần ít nhất 1 Skin để áp dụng. Vẫn gửi?')) return;
+  }
+
   haptic('success');
-  fireConfetti();
+  if (state.settings.confetti) fireConfetti();
 
   const payload = {
     type: 'chaymod',
     items: state.cart,
     ts: Date.now(),
+    vip: state.isVip,
+    admin: state.isAdmin,
   };
   try {
     tg.sendData(JSON.stringify(payload));
@@ -313,7 +520,6 @@ $('runBtn').addEventListener('click', () => {
     toast('Lỗi gửi: ' + e.message, 'error');
     return;
   }
-
   showRunOverlay(entries.length);
 });
 
@@ -325,9 +531,9 @@ function showRunOverlay(itemCount) {
 
   const steps = [
     { p: 15, t: '🔄 Đã nhận dữ liệu, đang khởi tạo...' },
-    { p: 40, t: '🛠️ Đang ghép mã Mod...' },
-    { p: 70, t: '📦 Đang đóng gói file ZIP...' },
-    { p: 95, t: '📤 Sắp gửi file vào chat của bạn...' },
+    { p: 38, t: '🛠️ Đang ghép mã Mod...' },
+    { p: 65, t: '📦 Đang đóng gói file ZIP...' },
+    { p: 92, t: '📤 Sắp gửi file vào chat của bạn...' },
   ];
   let i = 0;
   const bar = $('runBar');
@@ -339,7 +545,7 @@ function showRunOverlay(itemCount) {
   const tick = () => {
     if (i >= steps.length) {
       bar.style.width = '100%';
-      status.textContent = '✅ Hoàn tất gửi yêu cầu. Mở chat để xem file!';
+      status.textContent = '✅ Hoàn tất. Mở chat để xem file Mod!';
       status.classList.add('ok');
       return;
     }
@@ -348,112 +554,26 @@ function showRunOverlay(itemCount) {
     status.textContent = s.t;
     setTimeout(tick, 1100 + Math.random() * 600);
   };
-  setTimeout(tick, 500);
+  setTimeout(tick, 450);
 
-  // Cleanup cart after send
   state.cart = {};
   saveCart();
   updateBadge();
   renderCart();
+  syncExtraCardsState();
 }
 
 $('runClose').addEventListener('click', () => {
   haptic('light');
   $('runOverlay').hidden = true;
-  // Optional: close mini app khi user chủ động bấm
-  setTimeout(() => tg?.close?.(), 200);
+  setTimeout(() => tg?.close?.(), 180);
 });
 
-/* ───────────────────────── SEARCH ───────────────────────── */
-$('searchInput').addEventListener('input', (e) => {
-  const q = e.target.value.trim().toLowerCase();
-  const wrap = $('searchResults');
-  wrap.innerHTML = '';
-  if (q.length < 2) return;
-  const hits = [];
-  for (const [folder, skins] of Object.entries(state.catalog)) {
-    if (folder.toLowerCase().includes(q)) {
-      skins.forEach(s => hits.push({ folder, skin: s, score: 2 }));
-    } else {
-      skins.forEach(s => {
-        if (s.toLowerCase().includes(q)) hits.push({ folder, skin: s, score: 1 });
-      });
-    }
-    if (hits.length > 50) break;
-  }
-  hits.slice(0, 40).forEach((h, i) => {
-    const row = document.createElement('div');
-    row.className = 'search-row';
-    row.style.animationDelay = `${i * 0.02}s`;
-    row.innerHTML = `<div><b>${escapeHtml(h.folder)}</b><div class="meta">${escapeHtml(h.skin)}</div></div><span>›</span>`;
-    row.addEventListener('click', () => {
-      state.cart[h.folder] = h.skin;
-      saveCart();
-      updateBadge();
-      haptic('success');
-      toast(`✓ ${h.folder}: ${shorten(h.skin, 22)}`, 'success');
-    });
-    wrap.appendChild(row);
-  });
-  if (!hits.length) {
-    wrap.innerHTML = `<div class="empty"><p>Không tìm thấy "${escapeHtml(q)}"</p></div>`;
-  }
-});
-
-/* ───────────────────────── UTIL ───────────────────────── */
-function saveCart() {
-  try { localStorage.setItem('bannei_cart', JSON.stringify(state.cart)); } catch {}
-}
-function loadCartLocal() {
-  try {
-    const v = localStorage.getItem('bannei_cart');
-    if (v) state.cart = JSON.parse(v) || {};
-  } catch {}
-}
-function updateBadge() {
-  const n = Object.keys(state.cart).length;
-  const el = $('cartBadge');
-  el.textContent = n ? n : '';
-  if (n) el.removeAttribute('data-zero'); else el.setAttribute('data-zero','');
-}
-function toast(msg, type='') {
-  const t = $('toast');
-  t.className = 'toast show ' + type;
-  t.textContent = msg;
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => { t.className = 'toast'; }, 2200);
-}
-function haptic(kind='light') {
-  try {
-    const h = tg?.HapticFeedback;
-    if (!h) return;
-    if (['success','warning','error'].includes(kind)) h.notificationOccurred(kind);
-    else h.impactOccurred(kind);
-  } catch {}
-}
-function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function escapeAttr(s){ return escapeHtml(s).replace(/'/g,'&#39;'); }
-function shorten(s, n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
-
-function fireConfetti() {
-  const wrap = $('confetti');
-  wrap.innerHTML = '';
-  const colors = ['#6c8cff','#b16cff','#ffd25f','#ff6b9a','#34d399'];
-  for (let i = 0; i < 60; i++) {
-    const s = document.createElement('span');
-    s.style.left = Math.random() * 100 + '%';
-    s.style.background = colors[i % colors.length];
-    s.style.animationDelay = (Math.random() * 0.4) + 's';
-    s.style.animationDuration = (1.4 + Math.random() * 1.2) + 's';
-    s.style.transform = `rotate(${Math.random()*360}deg)`;
-    wrap.appendChild(s);
-  }
-  setTimeout(() => wrap.innerHTML = '', 2400);
-}
-
-/* ───────────────────────── ADMIN ACTIONS ───────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   ADMIN ACTIONS
+   ═══════════════════════════════════════════════════════════════ */
 function bindAdminButtons() {
-  qsa('.admin-card button[data-act]').forEach(btn => {
+  qsa('.admin-card button[data-act]').forEach((btn) => {
     btn.addEventListener('click', () => onAdminClick(btn));
   });
 }
@@ -463,6 +583,7 @@ function onAdminClick(btn) {
   const confirmMsg = btn.dataset.confirm;
   if (confirmMsg && !confirm(confirmMsg)) return;
   if (!tg) { toast('Cần mở qua Telegram!', 'error'); return; }
+  if (!state.isAdmin) { toast('Bạn không phải Admin!', 'error'); haptic('error'); return; }
 
   const args = {};
   let valid = true;
@@ -496,8 +617,8 @@ function onAdminClick(btn) {
     case 'resetvipall':
     case 'tatkey':
     case 'batkey':
+    case 'statuskey':
     case 'listvip':
-      // no args
       break;
   }
 
@@ -511,17 +632,208 @@ function onAdminClick(btn) {
     toast('Lỗi gửi: ' + e.message, 'error');
     return;
   }
-  toast('📤 Đã gửi → kiểm tra chat bot', 'success');
+  toast('📤 Đã gửi → mở chat bot để xem kết quả', 'success');
+  // clear inputs after send
+  if (['vipmember','congvipall','resetvip','ban','unban','guiall'].includes(act)) {
+    ['adm_vip_uid','adm_vip_days','adm_all_days','adm_reset_uid','adm_ban_uid','adm_unban_uid','adm_broadcast']
+      .forEach((id) => { const el = $(id); if (el) el.value = ''; });
+  }
 }
 
-/* ───────────────────────── BOOT ───────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   MORE / SETTINGS
+   ═══════════════════════════════════════════════════════════════ */
+function refreshSettingsLabels() {
+  $('hapticVal').textContent = state.settings.haptic ? 'BẬT' : 'TẮT';
+  $('confettiVal').textContent = state.settings.confetti ? 'BẬT' : 'TẮT';
+}
+
+qsa('.set-card').forEach((card) => {
+  card.addEventListener('click', () => {
+    const a = card.dataset.action;
+    haptic('light');
+    if (a === 'checkvip') {
+      if (state.isVip) {
+        toast(`💎 Bạn còn ${state.vipDays} ngày VIP`, 'success');
+      } else if (state.isAdmin) {
+        toast('👑 Bạn là ADMIN — quyền tối cao', 'success');
+      } else {
+        toast('❌ Bạn chưa có VIP. Liên hệ Admin để mua.', 'warn');
+      }
+    } else if (a === 'myid') {
+      const id = tg?.initDataUnsafe?.user?.id;
+      if (!id) return toast('Không lấy được ID', 'error');
+      copyText(String(id));
+      toast(`📋 Copied: ${id}`, 'success');
+    } else if (a === 'haptic') {
+      state.settings.haptic = !state.settings.haptic;
+      saveSettings();
+      refreshSettingsLabels();
+      toast(`📳 Rung ${state.settings.haptic ? 'BẬT' : 'TẮT'}`, 'success');
+    } else if (a === 'confetti') {
+      state.settings.confetti = !state.settings.confetti;
+      saveSettings();
+      refreshSettingsLabels();
+      toast(`🎉 Pháo bông ${state.settings.confetti ? 'BẬT' : 'TẮT'}`, 'success');
+    } else if (a === 'contact') {
+      try { tg?.openTelegramLink?.(ADMIN_CONTACT); } catch {}
+      try { tg?.openLink?.(ADMIN_CONTACT); } catch {}
+    } else if (a === 'donate') {
+      copyText('109874557013');
+      toast('📋 Đã copy STK: 109874557013 — VIETINBANK', 'success');
+    } else if (a === 'reset') {
+      if (!confirm('Xoá cache + giỏ + cài đặt?')) return;
+      try { localStorage.clear(); } catch {}
+      state.cart = {};
+      state.settings = defaultSettings();
+      saveSettings();
+      updateBadge();
+      renderCart();
+      syncExtraCardsState();
+      refreshSettingsLabels();
+      toast('♻️ Đã reset', 'success');
+    } else if (a === 'about') {
+      toast('BANNEI MOD LQ · Liquid Glass 6.0 · 2026', 'success');
+    }
+  });
+});
+
+function defaultSettings() { return { haptic: true, confetti: true }; }
+function loadSettings() {
+  try {
+    const v = localStorage.getItem('bannei_settings');
+    return v ? { ...defaultSettings(), ...JSON.parse(v) } : defaultSettings();
+  } catch { return defaultSettings(); }
+}
+function saveSettings() {
+  try { localStorage.setItem('bannei_settings', JSON.stringify(state.settings)); } catch {}
+}
+function copyText(t) {
+  try { navigator.clipboard?.writeText(t); }
+  catch {
+    const ta = document.createElement('textarea');
+    ta.value = t; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); ta.remove();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTIL
+   ═══════════════════════════════════════════════════════════════ */
+function saveCart() {
+  try { localStorage.setItem('bannei_cart', JSON.stringify(state.cart)); } catch {}
+}
+function loadCartLocal() {
+  try {
+    const v = localStorage.getItem('bannei_cart');
+    if (v) state.cart = JSON.parse(v) || {};
+  } catch {}
+}
+function updateBadge() {
+  const n = Object.keys(state.cart).length;
+  const el = $('cartBadge');
+  el.textContent = n ? n : '';
+  if (n) el.removeAttribute('data-zero'); else el.setAttribute('data-zero', '');
+  $('stCart').textContent = n;
+}
+function toast(msg, type = '') {
+  const t = $('toast');
+  t.className = 'toast show ' + type;
+  t.textContent = msg;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { t.className = 'toast'; }, 2400);
+}
+function haptic(kind = 'light') {
+  if (!state.settings.haptic) return;
+  try {
+    const h = tg?.HapticFeedback;
+    if (!h) return;
+    if (['success', 'warning', 'error'].includes(kind)) h.notificationOccurred(kind);
+    else h.impactOccurred(kind);
+  } catch {}
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+function escapeAttr(s){ return escapeHtml(s).replace(/'/g, '&#39;'); }
+function shorten(s, n){ return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+function highlight(text, q) {
+  const safe = escapeHtml(text);
+  if (!q) return safe;
+  const re = new RegExp('(' + q.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + ')', 'ig');
+  return safe.replace(re, '<mark style="background:rgba(108,140,255,.3);color:#fff;border-radius:3px;padding:0 2px">$1</mark>');
+}
+
+function fireConfetti() {
+  const wrap = $('confetti');
+  wrap.innerHTML = '';
+  const colors = ['#6c8cff','#b16cff','#ffd25f','#ff6b9a','#34d399','#5ed5ff'];
+  for (let i = 0; i < 72; i++) {
+    const s = document.createElement('span');
+    s.style.left = Math.random() * 100 + '%';
+    s.style.background = colors[i % colors.length];
+    s.style.animationDelay = (Math.random() * 0.5) + 's';
+    s.style.animationDuration = (1.4 + Math.random() * 1.3) + 's';
+    s.style.transform = `rotate(${Math.random() * 360}deg)`;
+    wrap.appendChild(s);
+  }
+  setTimeout(() => { wrap.innerHTML = ''; }, 2500);
+}
+
+/* ripple on buttons */
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-primary, .btn-ghost, .btn-danger, .alpha-cell, .hero-cell, .zoom-cell');
+  if (!btn) return;
+  const r = btn.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple-fx';
+  const size = Math.max(r.width, r.height);
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - r.left - size / 2) + 'px';
+  ripple.style.top = (e.clientY - r.top - size / 2) + 'px';
+  const pos = getComputedStyle(btn).position;
+  if (pos === 'static') btn.style.position = 'relative';
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+}, true);
+
+/* theme detection */
+function applyTheme() {
+  const scheme = tg?.colorScheme || 'dark';
+  document.body.classList.toggle('tg-light', scheme === 'light');
+}
+tg?.onEvent?.('themeChanged', applyTheme);
+
+/* ═══════════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════════ */
 loginTelegram();
 loadCartLocal();
 updateBadge();
+syncExtraCardsState();
 bindAdminButtons();
+refreshSettingsLabels();
+applyTheme();
 loadCatalog();
 
-// Apply Telegram theme on change
-tg?.onEvent?.('themeChanged', () => {
-  // CSS vars auto-applied; nothing manual needed
+/* Telegram BackButton — auto handle */
+function refreshBack() {
+  if (!tg?.BackButton) return;
+  const heroesActive = $('page-heroes').classList.contains('active');
+  const onSubHeroes = heroesActive && (!$('alphaPane').hidden === false || !$('heroListPane').hidden || !$('skinListPane').hidden);
+  const extrasActive = $('page-extras').classList.contains('active');
+  const onSubExtras = extrasActive && (!$('zoomPicker').hidden || !$('nutbamPicker').hidden);
+  const subOpen =
+    (heroesActive && (!$('heroListPane').hidden || !$('skinListPane').hidden)) ||
+    (extrasActive && (!$('zoomPicker').hidden || !$('nutbamPicker').hidden));
+  if (subOpen) tg.BackButton.show(); else tg.BackButton.hide();
+}
+tg?.BackButton?.onClick?.(() => {
+  if (!$('skinListPane').hidden) { switchHeroesPane('list'); haptic('light'); refreshBack(); return; }
+  if (!$('heroListPane').hidden) { switchHeroesPane('alpha'); haptic('light'); refreshBack(); return; }
+  if (!$('zoomPicker').hidden || !$('nutbamPicker').hidden) { switchExtrasPane('list'); haptic('light'); refreshBack(); return; }
+  refreshBack();
 });
+
+// re-eval back on every UI mutation hook
+new MutationObserver(refreshBack).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['hidden','class'] });

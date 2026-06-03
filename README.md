@@ -1,16 +1,38 @@
-# BANNEI MOD LQ — Telegram Mini App
+# BANNEI MOD LQ — Telegram Mini App · Liquid Glass 6.0
 
-UI 6.0 + animation + login Telegram tự động.
+UI mới (liquid glass / glassmorphism premium) + animation 60fps + Telegram login + Admin panel full quyền.
 
 ## Cấu trúc
 
 ```
-webapp/
-├── index.html      # giao diện
-├── styles.css      # theme + animation (theo Telegram themeParams)
-├── app.js          # logic + Telegram WebApp SDK
-└── catalog.json    # data tướng + skin (generate từ Sources_Bot/)
+minibot/
+├── index.html       # giao diện (5 tabs: Tướng · Bổ trợ · Giỏ · Khác · Admin)
+├── styles.css       # liquid glass tokens + spring animations
+├── app.js           # logic: login, catalog, cart, admin, settings
+└── catalog.json     # data {folder: [skin_names]} — auto-gen từ Sources_Bot/
 ```
+
+## Tính năng
+
+### User
+- 🎭 **Tướng** — chọn theo chữ cái + search realtime tướng/skin
+- 🛠️ **Bổ trợ** — Cam Xa (105–295%), HD Chiêu, MOD ROV, Máy Yếu, Nút Bấm
+- 🛒 **Giỏ** — review + 1 tap Chạy Mod, badge VIP nếu có
+- ⚙️ **Khác** — check VIP, copy ID, toggle haptic/confetti, donate, reset
+
+### Admin (auto-detect ID `2056107378`)
+- 💎 Cấp VIP / Cộng VIP toàn server / List / Tước VIP / Reset ALL
+- 🚫 Ban / 🔓 Unban
+- 🔑 Bật/Tắt/Status chế độ Key
+- 📣 Broadcast guiall
+
+### Animation
+- Aurora gradient mesh + animated blobs
+- Layered glass refraction, edge highlights, sheen sweep
+- Spring `cubic-bezier(.34,1.56,.64,1)` cho tap
+- Ripple, confetti, rocket-ring on run, stagger pop-in
+- Haptic feedback mọi tương tác (Telegram SDK)
+- BackButton tự ẩn/hiện theo sub-pane
 
 ## Build / Deploy (3 bước)
 
@@ -20,18 +42,14 @@ py build_catalog.py
 ```
 Mỗi lần thêm/xoá tướng hoặc skin → chạy lại.
 
-### 2) Push lên GitHub Pages
+### 2) Push GitHub Pages
 ```bash
-# tạo repo public (vd: bannei-modlq-webapp)
-cd webapp
-git init
-git add .
-git commit -m "init mini app"
+cd minibot
+git init && git add . && git commit -m "init mini app"
 git remote add origin git@github.com:<USER>/bannei-modlq-webapp.git
 git push -u origin main
 ```
-Vào **Settings → Pages → Source: main / root → Save**.
-URL hiện ra: `https://<user>.github.io/bannei-modlq-webapp/`
+**Settings → Pages → Source: main / root → Save** → copy URL.
 
 ### 3) Cấu hình bot
 Sửa `config/config.json`:
@@ -45,32 +63,37 @@ Khởi động lại bot:
 ```bash
 py bot.py
 ```
-Bot tự set Menu Button (nút ☰) trỏ Mini App.
 
 ## Sử dụng
 
 **User**:
-- Bấm nút **☰** trong chat → mở Mini App
-- Hoặc gõ `/webapp` → bấm nút **🚀 Mở Mini App**
-- Chọn tướng → skin → bổ trợ → bấm **🚀 Chạy Mod**
-- Bot nhận data, chạy luồng cũ như `/chaymod`
+- `/start` → bot auto-set Menu Button ☰ → bấm để mở Mini App
+- Hoặc `/webapp` → bấm nút **🚀 Mở Mini App — Liquid Glass**
+- Chọn tướng → skin → bổ trợ → **Chạy Mod** → bot xử lý
 
-**Telegram login**: tự động — Mini App đọc `Telegram.WebApp.initDataUnsafe.user`. Hiển thị avatar + tên + ID + VIP days còn lại (truyền qua `start_param`).
+**Telegram login**: auto. Mini App đọc `Telegram.WebApp.initDataUnsafe.user` cho avatar/tên/ID. VIP days + admin flag được bot encode qua `?s=vip:N+admin:1` mỗi lần mở.
+
+**Admin**: nếu user.id = ADMIN → tab 👑 Admin xuất hiện tự động.
 
 ## Lưu ý
 
-- HTTPS bắt buộc (GitHub Pages mặc định có).
-- WebApp `sendData()` chỉ work khi mở qua **Reply Keyboard Button** hoặc **Menu Button** — KHÔNG work với inline button. Lệnh `/webapp` dùng Reply Keyboard nên OK.
-- Theme tự đổi sáng/tối theo Telegram (CSS variables).
-- Catalog static — search/list client-side, không hit bot.
-- VIP days lấy lúc `/webapp` được gọi, encode vào URL query. Sau đó static.
+- HTTPS bắt buộc (GitHub Pages mặc định có)
+- `sendData()` chỉ work khi mở qua **Reply Keyboard Button** hoặc **Menu Button** — KHÔNG work với inline button. Cả `/webapp` lẫn menu button đều ổn
+- Bot dùng `MessageHandler(filters.StatusUpdate.WEB_APP_DATA)` để parse payload
+- Theme auto đổi sáng/tối theo Telegram (CSS vars + body class `tg-light`)
+- Catalog static — search/list client-side, không hit bot
+- Cart + settings persist trong `localStorage`
 
-## Animation list
-- Aurora blur blobs background
-- Avatar spinning conic gradient
-- Tab switch page slide
-- Alpha cells pop-in stagger
-- Skin/hero cells slide-right stagger
-- Toast slide-down
-- Confetti khi bấm Chạy Mod
-- Haptic feedback mọi tap (Telegram SDK)
+## Payload contract (sendData JSON)
+
+**chaymod**:
+```json
+{ "type": "chaymod", "items": {"Airi": "Airi Mỵ hồ", "HD Chiêu": "HD"}, "ts": 1717... }
+```
+
+**admin**:
+```json
+{ "type": "admin", "action": "vipmember", "args": {"user_id":"123","days":"30"}, "ts": 1717... }
+```
+
+Actions: `vipmember | congvipall | listvip | resetvip | resetvipall | ban | unban | batkey | tatkey | statuskey | guiall`

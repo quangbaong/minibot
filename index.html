@@ -3,20 +3,27 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-<title>BANNEI MOD LQ</title>
+<meta name="theme-color" content="#07080d" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>BANNEI MOD LQ — Liquid Glass</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=5">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=6">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
+<!-- ═══ BACKGROUND ═══ -->
 <div id="aurora">
   <span class="blob b1"></span>
   <span class="blob b2"></span>
   <span class="blob b3"></span>
+  <span class="blob b4"></span>
 </div>
+<div id="noise"></div>
 
+<!-- ═══ TOPBAR (user card) ═══ -->
 <header class="topbar">
   <div class="user-card" id="userCard">
     <div class="avatar" id="avatar"></div>
@@ -24,53 +31,89 @@
       <div class="user-name" id="userName">Đang đăng nhập...</div>
       <div class="user-id" id="userId">—</div>
     </div>
-    <div class="vip-pill" id="vipPill">
+    <div class="vip-pill none" id="vipPill">
       <span class="vip-dot"></span>
       <span id="vipText">Kiểm tra…</span>
     </div>
   </div>
+
+  <!-- live stats -->
+  <div class="stats-strip" id="statsStrip">
+    <div class="stat-chip"><span class="sv" id="stHeroes">0</span><span class="sl">Tướng</span></div>
+    <div class="stat-chip"><span class="sv" id="stSkins">0</span><span class="sl">Skin</span></div>
+    <div class="stat-chip"><span class="sv" id="stCart">0</span><span class="sl">Trong giỏ</span></div>
+  </div>
 </header>
 
-<nav class="tabs">
+<!-- ═══ BOTTOM TAB NAV ═══ -->
+<nav class="tabs" id="tabsBar">
   <button class="tab active" data-tab="heroes"><span>🎭</span><label>Tướng</label></button>
   <button class="tab" data-tab="extras"><span>🛠️</span><label>Bổ trợ</label></button>
-  <button class="tab" data-tab="cart"><span>🛒</span><label>Giỏ <em id="cartBadge">0</em></label></button>
-  <button class="tab" data-tab="search"><span>🔎</span><label>Tìm</label></button>
+  <button class="tab" data-tab="cart"><span>🛒</span><label>Giỏ <em id="cartBadge" data-zero></em></label></button>
+  <button class="tab" data-tab="more"><span>⚙️</span><label>Khác</label></button>
   <button class="tab admin-only" data-tab="admin" hidden><span>👑</span><label>Admin</label></button>
 </nav>
 
 <main>
 
-  <!-- HEROES -->
-  <section class="page active" id="page-heroes">
+<!-- ═══ HEROES PAGE ═══ -->
+<section class="page active" id="page-heroes">
+
+  <!-- alpha picker (default) -->
+  <div class="alpha-pane" id="alphaPane">
     <div class="page-head">
-      <h2>Chọn tướng</h2>
-      <p>Lọc theo chữ cái đầu</p>
+      <div>
+        <h2>Chọn Tướng</h2>
+        <p>Lọc theo chữ cái đầu hoặc tìm nhanh</p>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <span class="sb-icon">🔍</span>
+      <input id="heroSearch" type="search" placeholder="Tìm tướng hoặc skin..." autocomplete="off" enterkeyhint="search" />
+      <button class="clr" id="heroSearchClr" type="button" aria-label="Clear" hidden>✕</button>
     </div>
 
     <div class="alpha-grid" id="alphaGrid"></div>
+    <div class="search-results" id="heroSearchResults" hidden></div>
+  </div>
 
-    <div class="hero-list-wrap" id="heroListWrap" hidden>
-      <button class="back-btn" id="heroBack">‹ Đổi chữ cái</button>
-      <h3 id="heroListTitle"></h3>
-      <div class="hero-grid" id="heroGrid"></div>
-    </div>
-
-    <div class="skin-list-wrap" id="skinListWrap" hidden>
-      <button class="back-btn" id="skinBack">‹ Đổi tướng</button>
-      <h3 id="skinListTitle"></h3>
-      <div class="skin-grid" id="skinGrid"></div>
-    </div>
-  </section>
-
-  <!-- EXTRAS -->
-  <section class="page" id="page-extras">
+  <!-- hero list -->
+  <div class="hero-list-pane" id="heroListPane" hidden>
+    <button class="back-btn" id="heroBack">‹ Đổi chữ cái</button>
     <div class="page-head">
-      <h2>Chức năng bổ trợ</h2>
-      <p>Không bắt buộc kèm Skin</p>
+      <div>
+        <h2 id="heroListTitle"></h2>
+        <p id="heroListSub">Chọn tướng để xem skin</p>
+      </div>
+    </div>
+    <div class="hero-grid" id="heroGrid"></div>
+  </div>
+
+  <!-- skin list -->
+  <div class="skin-list-pane" id="skinListPane" hidden>
+    <button class="back-btn" id="skinBack">‹ Đổi tướng</button>
+    <div class="page-head">
+      <div>
+        <h2 id="skinListTitle"></h2>
+        <p id="skinListSub">Bấm để thêm vào giỏ</p>
+      </div>
+    </div>
+    <div class="skin-grid" id="skinGrid"></div>
+  </div>
+</section>
+
+<!-- ═══ EXTRAS PAGE ═══ -->
+<section class="page" id="page-extras">
+  <div class="extras-pane" id="extrasPane">
+    <div class="page-head">
+      <div>
+        <h2>Bổ trợ</h2>
+        <p>Không bắt buộc kèm Skin (trừ Cam Xa only — cần ít nhất 1 Skin)</p>
+      </div>
     </div>
 
-    <div class="extras-list">
+    <div class="extras-list" id="extrasList">
       <div class="extra-card" data-extra="camxa">
         <div class="extra-icon">📷</div>
         <div class="extra-body">
@@ -103,107 +146,246 @@
         </div>
         <span class="chevron">›</span>
       </div>
+      <div class="extra-card" data-extra="nutbam">
+        <div class="extra-icon">🕹️</div>
+        <div class="extra-body">
+          <h4>Nút Bấm</h4>
+          <p>Custom giao diện nút skill</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>
     </div>
+  </div>
 
-    <!-- Cam Xa picker -->
-    <div class="zoom-picker" id="zoomPicker" hidden>
-      <button class="back-btn" id="zoomBack">‹ Quay lại</button>
-      <h3>Chọn mức zoom</h3>
-      <div class="zoom-grid" id="zoomGrid"></div>
-    </div>
-  </section>
-
-  <!-- CART -->
-  <section class="page" id="page-cart">
+  <!-- Cam Xa picker -->
+  <div class="picker-pane" id="zoomPicker" hidden>
+    <button class="back-btn" id="zoomBack">‹ Quay lại</button>
     <div class="page-head">
-      <h2>Giỏ hàng Mod</h2>
-      <p>Danh sách bạn đã chọn</p>
+      <div>
+        <h2>Chọn mức zoom</h2>
+        <p>105% là gốc, càng cao càng xa</p>
+      </div>
+    </div>
+    <div class="zoom-grid" id="zoomGrid"></div>
+  </div>
+
+  <!-- Nút Bấm picker -->
+  <div class="picker-pane" id="nutbamPicker" hidden>
+    <button class="back-btn" id="nutbamBack">‹ Quay lại</button>
+    <div class="page-head">
+      <div>
+        <h2>Nút Bấm Kỹ Năng</h2>
+        <p>Chọn 1 style nút bấm bên dưới</p>
+      </div>
+    </div>
+    <div class="nut-list" id="nutbamList"></div>
+  </div>
+</section>
+
+<!-- ═══ CART PAGE ═══ -->
+<section class="page" id="page-cart">
+  <div class="page-head">
+    <div>
+      <h2>Giỏ Mod</h2>
+      <p>Danh sách Skin & Bổ trợ bạn đã chọn</p>
+    </div>
+    <button class="ph-action" id="reloadCart" hidden>↻ Tải lại</button>
+  </div>
+
+  <div class="cart-list" id="cartList"></div>
+
+  <div class="empty" id="cartEmpty">
+    <div class="empty-icon">📭</div>
+    <p>Giỏ đang trống. Mở tab <b>Tướng</b> hoặc <b>Bổ trợ</b> để bắt đầu chọn nhé!</p>
+  </div>
+
+  <div id="cartSummaryWrap" hidden>
+    <div class="cart-summary">
+      <div>
+        <div class="cs-label">Tổng số mục</div>
+        <div class="cs-val" id="csVal">0</div>
+        <div class="cs-meta" id="csMeta">—</div>
+      </div>
+      <div class="cs-badge" id="csVipBadge" hidden>VIP READY</div>
     </div>
 
-    <div class="cart-list" id="cartList"></div>
-    <div class="empty" id="cartEmpty">
-      <div class="empty-icon">📭</div>
-      <p>Giỏ trống. Hãy chọn ít nhất 1 Skin hoặc 1 chức năng.</p>
-    </div>
-
-    <div class="cart-actions" id="cartActions" hidden>
-      <button class="btn-ghost" id="clearBtn">🧹 Xoá tất cả</button>
+    <div class="cart-actions">
+      <button class="btn-ghost" id="clearBtn">🧹 Xoá hết</button>
       <button class="btn-primary" id="runBtn">🚀 Chạy Mod</button>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ADMIN -->
-  <section class="page admin-page" id="page-admin">
-    <div class="page-head">
+<!-- ═══ MORE / SETTINGS PAGE ═══ -->
+<section class="page" id="page-more">
+  <div class="page-head">
+    <div>
+      <h2>Khác</h2>
+      <p>Tiện ích · Cài đặt · Thông tin</p>
+    </div>
+  </div>
+
+  <div class="settings-list">
+
+    <div class="set-card" data-action="checkvip">
+      <div class="set-icon" style="background:linear-gradient(135deg,#ffd25f,#ff6b9a)">💎</div>
+      <div>
+        <h5>Kiểm tra VIP</h5>
+        <p>Xem thời hạn VIP còn lại</p>
+      </div>
+      <span class="set-val">›</span>
+    </div>
+
+    <div class="set-card" data-action="myid">
+      <div class="set-icon" style="background:linear-gradient(135deg,#6c8cff,#5ed5ff)">🆔</div>
+      <div>
+        <h5>Mã ID Telegram</h5>
+        <p id="myidVal">—</p>
+      </div>
+      <span class="set-val">📋</span>
+    </div>
+
+    <div class="set-card" data-action="haptic">
+      <div class="set-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">📳</div>
+      <div>
+        <h5>Rung phản hồi</h5>
+        <p>Haptic mỗi lần thao tác</p>
+      </div>
+      <span class="set-val" id="hapticVal">BẬT</span>
+    </div>
+
+    <div class="set-card" data-action="confetti">
+      <div class="set-icon" style="background:linear-gradient(135deg,#b16cff,#ff6b9a)">🎉</div>
+      <div>
+        <h5>Pháo bông</h5>
+        <p>Hiệu ứng khi chạy Mod</p>
+      </div>
+      <span class="set-val" id="confettiVal">BẬT</span>
+    </div>
+
+    <div class="set-card" data-action="contact">
+      <div class="set-icon" style="background:linear-gradient(135deg,#ff5577,#b16cff)">💬</div>
+      <div>
+        <h5>Liên hệ Admin</h5>
+        <p>Báo lỗi · Mua VIP · Hỗ trợ</p>
+      </div>
+      <span class="set-val">›</span>
+    </div>
+
+    <div class="set-card" data-action="donate">
+      <div class="set-icon" style="background:linear-gradient(135deg,#ffd25f,#34d399)">☕</div>
+      <div>
+        <h5>Ủng hộ Developer</h5>
+        <p>VIETINBANK: 109874557013</p>
+      </div>
+      <span class="set-val">📋</span>
+    </div>
+
+    <div class="set-card" data-action="reset">
+      <div class="set-icon" style="background:linear-gradient(135deg,#ff5577,#ffd25f)">♻️</div>
+      <div>
+        <h5>Đặt lại ứng dụng</h5>
+        <p>Xoá cache + giỏ hàng</p>
+      </div>
+      <span class="set-val">›</span>
+    </div>
+
+    <div class="set-card" data-action="about">
+      <div class="set-icon" style="background:linear-gradient(135deg,#5ed5ff,#6c8cff)">ℹ️</div>
+      <div>
+        <h5>BANNEI MOD LQ</h5>
+        <p>Liquid Glass 6.0 · v2026.06</p>
+      </div>
+      <span class="set-val" id="versionVal">v6.0</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ ADMIN PAGE ═══ -->
+<section class="page admin-page" id="page-admin">
+  <div class="page-head">
+    <div>
       <h2>👑 Admin Panel</h2>
-      <p>Toàn bộ quyền quản trị hệ thống</p>
+      <p>Toàn quyền điều hành hệ thống</p>
+    </div>
+  </div>
+
+  <div class="admin-grid">
+
+    <div class="adm-section-title">💎 Quản lý VIP</div>
+
+    <div class="admin-card">
+      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ffd25f,#ff6b9a)">💎</span><h4>Cấp VIP</h4></div>
+      <input type="number" placeholder="User ID" id="adm_vip_uid"/>
+      <input type="number" placeholder="Số ngày" id="adm_vip_days"/>
+      <button class="btn-primary" data-act="vipmember">Cấp VIP</button>
     </div>
 
-    <div class="admin-grid">
-
-      <div class="admin-card">
-        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ffd25f,#ff6b9a)">💎</span><h4>Cấp VIP</h4></div>
-        <input type="number" placeholder="User ID" id="adm_vip_uid"/>
-        <input type="number" placeholder="Số ngày" id="adm_vip_days"/>
-        <button class="btn-primary" data-act="vipmember">Cấp VIP</button>
-      </div>
-
-      <div class="admin-card">
-        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">📢</span><h4>Cộng VIP toàn server</h4></div>
-        <input type="number" placeholder="Số ngày" id="adm_all_days"/>
-        <button class="btn-primary" data-act="congvipall">Cộng tất cả</button>
-      </div>
-
-      <div class="admin-card">
-        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#8a93a4,#5eb1ff)">📋</span><h4>Danh sách VIP</h4></div>
-        <p class="ac-desc">Bot sẽ gửi list vào chat</p>
-        <button class="btn-ghost" data-act="listvip">Hiện list VIP</button>
-      </div>
-
-      <div class="admin-card">
-        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff6b9a,#ff5577)">♻️</span><h4>Reset VIP 1 user</h4></div>
-        <input type="number" placeholder="User ID" id="adm_reset_uid"/>
-        <button class="btn-ghost" data-act="resetvip">Tước VIP</button>
-      </div>
-
-      <div class="admin-card danger">
-        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff5577,#b16cff)">💥</span><h4>Reset ALL VIP</h4></div>
-        <p class="ac-desc">⚠️ Xoá sạch toàn bộ VIP</p>
-        <button class="btn-danger" data-act="resetvipall" data-confirm="Reset SẠCH toàn bộ VIP?">Reset Tất Cả</button>
-      </div>
-
-      <div class="admin-card">
-        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff5577,#ffd25f)">🚫</span><h4>Ban user</h4></div>
-        <input type="number" placeholder="User ID" id="adm_ban_uid"/>
-        <button class="btn-danger" data-act="ban">Ban</button>
-      </div>
-
-      <div class="admin-card">
-        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">🔓</span><h4>Unban user</h4></div>
-        <input type="number" placeholder="User ID" id="adm_unban_uid"/>
-        <button class="btn-primary" data-act="unban">Unban</button>
-      </div>
-
-      <div class="admin-card">
-        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#6c8cff,#b16cff)">🔑</span><h4>Chế độ Key</h4></div>
-        <p class="ac-desc">Tắt = gửi file thẳng. Bật = bắt vượt link.</p>
-        <div class="btn-row">
-          <button class="btn-primary" data-act="batkey">Bật</button>
-          <button class="btn-ghost" data-act="tatkey">Tắt</button>
-        </div>
-      </div>
-
-      <div class="admin-card wide">
-        <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#b16cff,#ff6b9a)">📣</span><h4>Broadcast (guiall)</h4></div>
-        <textarea placeholder="Nội dung gửi cho tất cả user…" id="adm_broadcast" rows="3"></textarea>
-        <button class="btn-primary" data-act="guiall">Gửi broadcast</button>
-      </div>
-
+    <div class="admin-card">
+      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">📢</span><h4>Cộng VIP toàn server</h4></div>
+      <input type="number" placeholder="Số ngày" id="adm_all_days"/>
+      <button class="btn-primary" data-act="congvipall">Cộng tất cả</button>
     </div>
-  </section>
+
+    <div class="admin-card">
+      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#8a93a4,#5eb1ff)">📋</span><h4>Danh sách VIP</h4></div>
+      <p class="ac-desc">Bot sẽ gửi list vào chat</p>
+      <button class="btn-ghost" data-act="listvip">Hiện list VIP</button>
+    </div>
+
+    <div class="admin-card">
+      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff6b9a,#ff5577)">♻️</span><h4>Tước VIP 1 user</h4></div>
+      <input type="number" placeholder="User ID" id="adm_reset_uid"/>
+      <button class="btn-ghost" data-act="resetvip">Tước VIP</button>
+    </div>
+
+    <div class="admin-card danger wide">
+      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff5577,#b16cff)">💥</span><h4>Reset ALL VIP</h4></div>
+      <p class="ac-desc">⚠️ Xoá sạch toàn bộ VIP — hành động không thể undo</p>
+      <button class="btn-danger" data-act="resetvipall" data-confirm="Reset SẠCH toàn bộ VIP? Không thể hoàn tác!">Reset Tất Cả</button>
+    </div>
+
+    <div class="adm-section-title">🛡️ Quản lý User</div>
+
+    <div class="admin-card">
+      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff5577,#ffd25f)">🚫</span><h4>Ban user</h4></div>
+      <input type="number" placeholder="User ID" id="adm_ban_uid"/>
+      <button class="btn-danger" data-act="ban">Ban</button>
+    </div>
+
+    <div class="admin-card">
+      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">🔓</span><h4>Unban user</h4></div>
+      <input type="number" placeholder="User ID" id="adm_unban_uid"/>
+      <button class="btn-primary" data-act="unban">Unban</button>
+    </div>
+
+    <div class="adm-section-title">🔑 Hệ thống Key</div>
+
+    <div class="admin-card wide">
+      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#6c8cff,#b16cff)">🔑</span><h4>Chế độ Key</h4></div>
+      <p class="ac-desc">Tắt = gửi file thẳng tay user. Bật = bắt vượt link lấy key.</p>
+      <div class="btn-row">
+        <button class="btn-primary" data-act="batkey">🔔 Bật Key</button>
+        <button class="btn-ghost" data-act="tatkey">🔕 Tắt Key</button>
+      </div>
+      <button class="btn-ghost" data-act="statuskey">📊 Xem trạng thái</button>
+    </div>
+
+    <div class="adm-section-title">📣 Broadcast</div>
+
+    <div class="admin-card wide">
+      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#b16cff,#ff6b9a)">📣</span><h4>Gửi tin toàn server (guiall)</h4></div>
+      <textarea placeholder="Nội dung gửi cho tất cả user…" id="adm_broadcast" rows="3"></textarea>
+      <button class="btn-primary" data-act="guiall">Gửi broadcast</button>
+    </div>
+
+  </div>
+</section>
 
 </main>
 
+<!-- ═══ FLOATING UI ═══ -->
 <div class="toast" id="toast"></div>
 
 <div class="loader" id="loader" hidden>
@@ -222,13 +404,13 @@
       <div class="run-emoji">🚀</div>
     </div>
     <h3 id="runTitle">Đã gửi yêu cầu!</h3>
-    <p id="runMsg">Bot đang tạo file Mod — vui lòng quay lại chat để nhận file.</p>
+    <p id="runMsg">Bot đang tạo file Mod — quay lại chat nhận file ZIP.</p>
     <div class="run-progress"><div class="run-bar" id="runBar"></div></div>
     <div class="run-status" id="runStatus">⏳ Đang xử lý trên server...</div>
     <button class="btn-primary" id="runClose">Quay lại chat</button>
   </div>
 </div>
 
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
