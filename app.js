@@ -208,11 +208,16 @@ function getHeroIconUrl(heroName, skinName) {
   const CDN = '30'; // fixed game-version CDN prefix
   if (skinName) {
     const skinCode = state.skinCodes[heroName + '|' + skinName];
-    if (skinCode) {
-      return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + skinCode + 'head.jpg';
+    if (skinCode && skinCode.length >= 5) {
+      // Skin code format: XXXYY — hero prefix (3) + variant (2)
+      // CDN URL uses variant as integer (no leading zero): 08→8, 15→15
+      const variant = parseInt(skinCode.slice(-2), 10);
+      return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + info.prefix + variant + 'head.jpg';
     }
+    // fallback: hero portrait
     return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + info.prefix + 'head.jpg';
   }
+  // hero portrait (no skin)
   return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + info.prefix + 'head.jpg';
 }
 
