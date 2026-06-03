@@ -117,8 +117,6 @@ function loginTelegram() {
 }
 
 /* ── Web Login Gate (non-Telegram access) ── */
-const BOT_DEEP_LINK = 'https://t.me/MODSKINin1_bot?start=webapp';
-
 function showWebLoginGate() {
   let gate = $('webLoginGate');
   if (!gate) {
@@ -129,16 +127,14 @@ function showWebLoginGate() {
       <div class="wlg-card">
         <div class="wlg-logo">🛡️</div>
         <h2>BANNEI MOD LQ</h2>
-        <p>Dang chuyen huong den <b>Telegram</b>...</p>
+        <p>Vui long mo qua <b>Telegram</b> de su dung.</p>
         <div class="wlg-buttons">
-          <a class="wlg-btn primary" href="${BOT_DEEP_LINK}">🤖 Mo Bot Telegram Ngay</a>
+          <a class="wlg-btn primary" href="https://t.me/MODSKINin1_bot">🤖 Mo Bot Telegram</a>
         </div>
-        <p class="wlg-hint">Sau khi mo bot, bam nut <b>🚀 Mo Mini App</b> de su dung.</p>
+        <p class="wlg-hint">Sau khi mo bot, bam <b>Menu ☰ → MOD LQ</b> de mo Mini App.</p>
       </div>
     `;
     document.body.appendChild(gate);
-    // Auto-redirect to Telegram bot with deep link (triggers /start webapp)
-    setTimeout(() => { location.href = BOT_DEEP_LINK; }, 1200);
   }
   gate.style.display = 'flex';
 }
