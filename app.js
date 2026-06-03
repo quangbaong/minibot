@@ -180,11 +180,20 @@ function hideLoader() { $('loader').hidden = true; }
 /* ═══════════════════════════════════════════════════════════════
    HERO ICON HELPERS
    ═══════════════════════════════════════════════════════════════ */
+
+// Static hero prefix map (fallback if hero_icons.json fails to load)
+const HERO_PREFIX = {"Airi":"130","Aleister":"156","Alice":"118","Allain":"537","Amily":"193","Annette":"519","Aoi":"536","Arduin":"126","Arthur":"166","Arum":"187","Astrid":"502","Ata":"511","Aya":"543","Azzen'Ka":"127","Baldum":"505","Bijan":"548","Billow":"599","Biron":"597","Bolt Baron":"598","Bonnie":"541","Bright":"540","Butterfly":"116","Capheny":"524","Celica":"192","Charlotte":"206","Chaugnar":"113","Cresht":"171","D'Arcy":"523","Dextra":"534","Dirak":"530","EX":"159","Eland'orr":"199","Elsu":"196","Enzo":"195","Erin":"567","Errol":"522","Fennik":"173","Florentino":"521","Gildur":"108","Goverra":"596","Grakk":"175","Hayate":"132","Heino":"563","Helen":"184","Iggy":"538","Ignis":"124","Ilumia":"136","Ishar":"526","Jinna":"115","Kahlii":"110","Kaine":"153","Keera":"531","Kil'Groth":"139","Kriknak":"162","Krixi":"106","Krizzix":"189","Lauriel":"141","Laville":"533","Liliana":"510","Lindis":"177","Lorion":"539","Lumburr":"168","Lữ Bố":"128","Maloch":"123","Marja":"121","Max":"180","Mganga":"119","Mina":"120","Ming":"568","Moren":"170","Murad":"131","Nakroth":"150","Natalya":"142","Ngộ Không":"167","Omega":"114","Omen":"506","Ormarr":"117","Paine":"137","Preyta":"148","Qi":"528","Quillen":"518","Raz":"157","Richter":"515","Rouie":"191","Rourke":"512","Roxie":"514","Ryoma":"163","Sephera":"527","Sinestrea":"535","Skud":"134","Slimz":"169","Stuart":"174","Superman":"140","Taara":"144","Tachi":"542","TeeMee":"186","Teeri":"546","Tel'Annas":"501","Thane":"135","The Flash":"507","Thorne":"532","Toro":"105","Triệu Vân":"129","Tulen":"190","Valhein":"133","Veera":"109","Veres":"520","Violet":"111","Volkath":"529","Wisp":"508","Wonder Woman":"504","Xeniel":"149","Y'bneth":"509","Yan":"544","Yena":"154","Yorn":"112","Yue":"545","Zata":"513","Zephys":"107","Zill":"146","Zip":"525","Zuka":"503","Điêu Thuyền":"152"};
+
 async function loadHeroIcons() {
+  // Try fetching extended data first, fall back to static HERO_PREFIX
   try {
     const res = await fetch('hero_icons.json?t=' + Date.now());
-    if (res.ok) state.heroIcons = await res.json();
+    if (res.ok) { state.heroIcons = await res.json(); return; }
   } catch {}
+  // Build minimal structure from static data
+  for (const [name, prefix] of Object.entries(HERO_PREFIX)) {
+    state.heroIcons[name] = { prefix: prefix };
+  }
 }
 async function loadSkinCodes() {
   try {
@@ -261,7 +270,7 @@ function openLetter(L) {
     const cell = document.createElement('button');
     cell.className = 'hero-cell';
     if (state.cart[f]) cell.classList.add('has-skin');
-    const iconHtml = heroIconImg(f, null, 'hc-icon');
+    const iconHtml = heroIconImg(f, null, 'hc-icon') || '<span class="hc-icon-fb">🎭</span>';
     cell.innerHTML = `${iconHtml}${escapeHtml(f)}<span class="hc-skins">${skins.length} skin</span>`;
     cell.style.animationDelay = `${Math.min(i, 30) * 0.025}s`;
     cell.addEventListener('click', () => openHero(f));
@@ -274,34 +283,25 @@ function openHero(folder) {
   state.currentHero = folder;
   haptic('medium');
   const skins = state.catalog[folder] || [];
-  const hasCdn = !!(state.heroIcons[folder] && state.heroIcons[folder].prefix);
   $('skinListTitle').textContent = folder;
   $('skinListSub').textContent = skins.length ? `${skins.length} skin có sẵn` : 'Chưa có skin';
   const grid = $('skinGrid');
   grid.innerHTML = '';
-  // Toggle grid layout: icon grid when CDN available, list otherwise
-  grid.className = hasCdn ? 'skin-grid icon-mode' : 'skin-grid';
+  grid.className = 'skin-grid icon-mode';
   if (!skins.length) {
     grid.innerHTML = `<div class="empty"><div class="empty-icon">🎭</div><p>Tướng này chưa có skin trong catalog.</p></div>`;
   } else {
     skins.forEach((s, i) => {
       const cell = document.createElement('button');
-      cell.className = hasCdn ? 'skin-icon-cell' : 'skin-cell';
+      cell.className = 'skin-icon-cell';
       if (state.cart[folder] === s) cell.classList.add('selected');
       const skIcon = heroIconImg(folder, s, 'sk-portrait');
-      if (hasCdn && skIcon) {
-        cell.innerHTML = `
-          ${skIcon}
-          <span class="sk-label">${escapeHtml(s.replace(folder + ' ', ''))}</span>
-          <span class="sk-check">✓</span>
-        `;
-      } else {
-        cell.innerHTML = `
-          <span class="sk-num">${i + 1}</span>
-          <span class="sk-name">${escapeHtml(s)}</span>
-          <span class="sk-chev">›</span>
-        `;
-      }
+      const shortName = s.replace(folder + ' ', '');
+      cell.innerHTML = `
+        ${skIcon || `<span class="sk-portrait-fb">🎭</span>`}
+        <span class="sk-label">${escapeHtml(shortName)}</span>
+        <span class="sk-check">✓</span>
+      `;
       cell.style.animationDelay = `${Math.min(i, 20) * 0.03}s`;
       cell.addEventListener('click', () => pickSkin(folder, s, cell));
       grid.appendChild(cell);
