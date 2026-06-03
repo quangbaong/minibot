@@ -12,7 +12,7 @@ if (tg) {
 }
 
 const ADMIN_ID = 2056107378;
-const ADMIN_CONTACT = 'https://t.me/Baong19';
+const ADMIN_CONTACT = 'https://t.me/quangbaong';
 
 /* ── selectors ── */
 const $ = (id) => document.getElementById(id);
@@ -127,15 +127,16 @@ function showWebLoginGate() {
       <div class="wlg-card">
         <div class="wlg-logo">🛡️</div>
         <h2>BANNEI MOD LQ</h2>
-        <p>Ung dung <b>Private</b> — chi hoat dong trong <b>Telegram</b>.</p>
+        <p>Dang chuyen huong den <b>Telegram</b>...</p>
         <div class="wlg-buttons">
-          <a class="wlg-btn primary" href="https://t.me/bannei_mod_lq_bot">🤖 Mo Bot Telegram</a>
-          <button class="wlg-btn ghost" onclick="location.href='tg://resolve?domain=bannei_mod_lq_bot'">⚡ Mo Truc Tiep Telegram</button>
+          <a class="wlg-btn primary" href="https://t.me/MODSKINin1_bot">🤖 Mo Bot Telegram Ngay</a>
         </div>
-        <p class="wlg-hint">Sau khi mo bot, bam <b>Menu ☰</b> hoac go <b>/webapp</b> de mo Mini App.</p>
+        <p class="wlg-hint">Sau khi mo bot, bam <b>Menu ☰ → MOD LQ</b> de mo Mini App.</p>
       </div>
     `;
     document.body.appendChild(gate);
+    // Auto-redirect to Telegram bot after 1.5s
+    setTimeout(() => { location.href = 'https://t.me/MODSKINin1_bot'; }, 1500);
   }
   gate.style.display = 'flex';
 }
