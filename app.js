@@ -655,13 +655,18 @@ function showRunOverlay(itemCount) {
 $('runClose').addEventListener('click', () => {
   haptic('light');
   $('runOverlay').hidden = true;
-  // Only clear cart when user confirms they're done
   state.cart = {};
   saveCart();
   updateBadge();
   renderCart();
   syncExtraCardsState();
   setTimeout(() => tg?.close?.(), 180);
+});
+
+$('runStay').addEventListener('click', () => {
+  haptic('light');
+  $('runOverlay').hidden = true;
+  toast('🛒 Tiếp tục chọn Mod!', 'success');
 });
 
 /* ═══════════════════════════════════════════════════════════════
