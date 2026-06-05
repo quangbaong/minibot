@@ -36,6 +36,87 @@ const state = {
 
 const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'MOD ROV', 'Máy Yếu', 'Nút Bấm']);
 
+/* ═══════════════════════════════════════════════════════════════
+   WEB ↔ BOT API BRIDGE  (1 luồng: gửi lệnh + nhận phản hồi tại chỗ)
+   - API_BASE: bot tự gắn qua ?api=<tunnel> khi mở Mini App
+   - INIT_DATA: chuỗi gốc để bot xác thực (HMAC) chống giả mạo
+   ═══════════════════════════════════════════════════════════════ */
+const _urlp = new URLSearchParams(location.search);
+const API_BASE = (_urlp.get('api') || '').replace(/\/+$/, '');
+const INIT_DATA = tg?.initData || '';
+const API_READY = !!(API_BASE && INIT_DATA);
+let _pollSeq = 0;
+let _pollTimer = null;
+
+async function apiSend(payload) {
+  try {
+    const res = await fetch(API_BASE + '/api/cmd', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: INIT_DATA, ...payload }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      toast('❌ Bot từ chối: ' + (j.error || res.status), 'error');
+      return false;
+    }
+    return true;
+  } catch (e) {
+    toast('❌ Không gọi được bot: ' + e.message, 'error');
+    return false;
+  }
+}
+
+function botLog(text, fileUrl) {
+  const box = $('botLog');
+  if (!box) return;
+  if (text) {
+    const row = document.createElement('div');
+    row.className = 'botmsg';
+    row.textContent = text;
+    box.appendChild(row);
+  }
+  if (fileUrl) {
+    const a = document.createElement('a');
+    a.className = 'botfile';
+    a.href = API_BASE + fileUrl + '?initData=' + encodeURIComponent(INIT_DATA);
+    a.textContent = '⬇️ Tải file mod';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    box.appendChild(a);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+function openBotPanel(clear) {
+  const p = $('botPanel');
+  if (!p) return;
+  p.hidden = false;
+  if (clear) { const b = $('botLog'); if (b) b.innerHTML = ''; }
+}
+
+function startPolling() {
+  if (!API_READY) return;
+  stopPolling();
+  _pollTimer = setInterval(async () => {
+    try {
+      const res = await fetch(API_BASE + '/api/poll?after=' + _pollSeq +
+        '&initData=' + encodeURIComponent(INIT_DATA));
+      const j = await res.json().catch(() => ({}));
+      if (j.ok && Array.isArray(j.msgs)) {
+        for (const m of j.msgs) {
+          if (m.seq > _pollSeq) _pollSeq = m.seq;
+          botLog(m.text, m.file);
+        }
+      }
+    } catch { /* im lặng, thử lại nhịp sau */ }
+  }, 1500);
+}
+
+function stopPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
+
 const NUTBAM_LIST = [
   { id: '10620', name: 'Krixi Phù Thủy Thời Không', emoji: '🎭' },
   { id: '14111', name: 'Lau Thứ Nguyên Vệ Thần',     emoji: '🛡️' },
@@ -597,10 +678,16 @@ $('runBtn').addEventListener('click', () => {
   haptic('success');
   if (state.settings.confetti) fireConfetti();
 
-  const inTelegram = !!(tg?.initDataUnsafe?.user);
-
-  if (inTelegram) {
-    // Telegram WebView: use sendData
+  if (API_READY) {
+    // Luồng chính: gửi qua API, phản hồi hiện ngay trong app
+    _pollSeq = 0;
+    openBotPanel(true);
+    botLog('📤 Đã gửi yêu cầu, đang chờ bot xử lý...');
+    startPolling();
+    apiSend({ type: 'chaymod', items: state.cart });
+    showRunOverlay(entries.length);
+  } else if (tg?.initDataUnsafe?.user) {
+    // Dự phòng: mở qua nút bàn phím → sendData
     const payload = { type: 'chaymod', items: state.cart, ts: Date.now(), vip: state.isVip, admin: state.isAdmin };
     try {
       tg.sendData(JSON.stringify(payload));
@@ -610,7 +697,7 @@ $('runBtn').addEventListener('click', () => {
     }
     showRunOverlay(entries.length);
   } else {
-    // Web mode: encode cart → deep link to bot
+    // Ngoài Telegram: deep link (chỉ hợp giỏ nhỏ)
     const cartJson = JSON.stringify(state.cart);
     const encoded = btoa(unescape(encodeURIComponent(cartJson))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
     const deepLink = 'https://t.me/MODSKINin1_bot?start=mod_' + encoded;
@@ -634,8 +721,9 @@ function showRunOverlayWeb(itemCount) {
 function showRunOverlay(itemCount) {
   $('runOverlay').hidden = false;
   $('runTitle').textContent = '🎉 Đã gửi yêu cầu!';
-  $('runMsg').innerHTML =
-    `Bot đang xử lý <b>${itemCount}</b> mục Mod.<br>Quay lại chat để nhận file ZIP nhé!`;
+  $('runMsg').innerHTML = API_READY
+    ? `Bot đang xử lý <b>${itemCount}</b> mục Mod.<br>📥 Phản hồi & file sẽ hiện <b>ngay trong app</b>.`
+    : `Bot đang xử lý <b>${itemCount}</b> mục Mod.<br>Quay lại chat để nhận file ZIP nhé!`;
 
   const steps = [
     { p: 15, t: '🔄 Đã nhận dữ liệu, đang khởi tạo...' },
@@ -673,7 +761,8 @@ $('runClose').addEventListener('click', () => {
   updateBadge();
   renderCart();
   syncExtraCardsState();
-  setTimeout(() => tg?.close?.(), 180);
+  // Chế độ API: ở lại app để xem phản hồi bot, KHÔNG đóng Mini App
+  if (!API_READY) setTimeout(() => tg?.close?.(), 180);
 });
 
 $('runStay').addEventListener('click', () => {
@@ -681,6 +770,15 @@ $('runStay').addEventListener('click', () => {
   $('runOverlay').hidden = true;
   toast('🛒 Tiếp tục chọn Mod!', 'success');
 });
+
+(() => {
+  const c = $('botPanelClose');
+  if (c) c.addEventListener('click', () => {
+    haptic('light');
+    stopPolling();
+    $('botPanel').hidden = true;
+  });
+})();
 
 /* ═══════════════════════════════════════════════════════════════
    ADMIN ACTIONS
@@ -738,14 +836,22 @@ function onAdminClick(btn) {
   if (!valid) { haptic('error'); return; }
 
   haptic('success');
-  const payload = { type: 'admin', action: act, args, ts: Date.now() };
-  try {
-    tg.sendData(JSON.stringify(payload));
-  } catch (e) {
-    toast('Lỗi gửi: ' + e.message, 'error');
-    return;
+  if (API_READY) {
+    _pollSeq = 0;
+    openBotPanel(true);
+    botLog('📤 Đã gửi lệnh admin: ' + act);
+    startPolling();
+    apiSend({ type: 'admin', action: act, args });
+  } else {
+    const payload = { type: 'admin', action: act, args, ts: Date.now() };
+    try {
+      tg.sendData(JSON.stringify(payload));
+    } catch (e) {
+      toast('Lỗi gửi: ' + e.message, 'error');
+      return;
+    }
+    toast('📤 Đã gửi → mở chat bot để xem kết quả', 'success');
   }
-  toast('📤 Đã gửi → mở chat bot để xem kết quả', 'success');
   // clear inputs after send
   if (['vipmember','congvipall','resetvip','ban','unban','guiall'].includes(act)) {
     ['adm_vip_uid','adm_vip_days','adm_all_days','adm_reset_uid','adm_ban_uid','adm_unban_uid','adm_broadcast']

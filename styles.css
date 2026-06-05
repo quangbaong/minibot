@@ -1033,3 +1033,52 @@ body.tg-light #aurora{
     border-color:rgba(108,140,255,.3);
   }
 }
+
+/* ── Bot response panel (Web ↔ Bot API) ── */
+.bot-panel{
+  position:fixed;
+  left:12px;right:12px;bottom:12px;
+  z-index:9999;
+  max-height:46vh;
+  display:flex;flex-direction:column;
+  background:var(--glass-2,rgba(20,22,34,.92));
+  border:1px solid rgba(108,140,255,.35);
+  border-radius:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.55);
+  backdrop-filter:blur(18px);
+  overflow:hidden;
+}
+.bot-panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;
+  font-weight:700;font-size:14px;
+  color:#dfe4ff;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.bot-panel-close{
+  background:rgba(255,255,255,.08);
+  border:none;color:#fff;
+  width:28px;height:28px;border-radius:50%;
+  cursor:pointer;font-size:14px;line-height:1;
+}
+.bot-panel-close:hover{background:rgba(255,85,119,.3)}
+.bot-log{
+  padding:10px 14px;
+  overflow-y:auto;
+  font-size:13px;line-height:1.5;
+  color:#eef1ff;
+}
+.botmsg{
+  padding:8px 10px;margin-bottom:6px;
+  background:rgba(108,140,255,.12);
+  border-radius:10px;
+  white-space:pre-wrap;word-break:break-word;
+}
+.botfile{
+  display:inline-block;margin:2px 0 8px;
+  padding:8px 14px;
+  background:linear-gradient(135deg,#6c8cff,#9a6cff);
+  color:#fff;font-weight:700;text-decoration:none;
+  border-radius:10px;
+}
+.botfile:hover{box-shadow:0 8px 22px rgba(108,140,255,.6)}
