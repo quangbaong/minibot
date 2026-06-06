@@ -112,13 +112,51 @@ function botLog(text, fileUrl) {
     box.appendChild(a);
   }
   box.scrollTop = box.scrollHeight;
+
+  // đang thu nhỏ → tăng badge tin chưa đọc trên FAB
+  const panel = $('botPanel');
+  if (panel && (panel.hidden || !panel.classList.contains('show'))) {
+    _botUnread++;
+    const badge = $('botFabBadge');
+    if (badge) { badge.textContent = _botUnread > 9 ? '9+' : String(_botUnread); badge.classList.add('show'); }
+  }
 }
+
+let _botUnread = 0;
 
 function openBotPanel(clear) {
   const p = $('botPanel');
   if (!p) return;
-  p.hidden = false;
   if (clear) { const b = $('botLog'); if (b) b.innerHTML = ''; }
+  const fab = $('botFab');
+  if (fab) fab.hidden = true;
+  _botUnread = 0;
+  const badge = $('botFabBadge');
+  if (badge) badge.classList.remove('show');
+  p.hidden = false;
+  // ép reflow rồi thêm .show để chạy animation trượt lên
+  void p.offsetWidth;
+  p.classList.add('show');
+}
+
+function minimizeBotPanel() {
+  const p = $('botPanel');
+  if (!p) return;
+  p.classList.remove('show');
+  setTimeout(() => { p.hidden = true; }, 420);
+  const fab = $('botFab');
+  if (fab) fab.hidden = false;
+}
+
+function closeBotPanel() {
+  stopPolling();
+  const p = $('botPanel');
+  if (p) { p.classList.remove('show'); setTimeout(() => { p.hidden = true; }, 420); }
+  const fab = $('botFab');
+  if (fab) fab.hidden = true;
+  _botUnread = 0;
+  const badge = $('botFabBadge');
+  if (badge) badge.classList.remove('show');
 }
 
 function startPolling() {
@@ -725,7 +763,6 @@ $('runBtn').addEventListener('click', () => {
     botLog('📤 Đã gửi yêu cầu, đang chờ bot xử lý...');
     startPolling();
     apiSend({ type: 'chaymod', items: state.cart });
-    showRunOverlay(entries.length);
   } else if (getTgUser()) {
     // Dự phòng: mở qua nút bàn phím → sendData
     const payload = { type: 'chaymod', items: state.cart, ts: Date.now(), vip: state.isVip, admin: state.isAdmin };
@@ -812,12 +849,11 @@ $('runStay').addEventListener('click', () => {
 });
 
 (() => {
-  const c = $('botPanelClose');
-  if (c) c.addEventListener('click', () => {
-    haptic('light');
-    stopPolling();
-    $('botPanel').hidden = true;
-  });
+  const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', fn); };
+  on('botPanelClose', () => { haptic('light'); closeBotPanel(); });
+  on('botPanelMin',   () => { haptic('light'); minimizeBotPanel(); });
+  on('botBackdrop',   () => { haptic('light'); minimizeBotPanel(); });
+  on('botFab',        () => { haptic('light'); openBotPanel(false); });
 })();
 
 /* ═══════════════════════════════════════════════════════════════
