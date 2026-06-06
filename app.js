@@ -74,7 +74,7 @@ async function checkApiConnection() {
   }
 }
 
-async function apiSend(payload) {
+async function apiSend(payload, silent) {
   try {
     const res = await fetch(API_BASE + '/api/cmd', {
       method: 'POST',
@@ -83,80 +83,119 @@ async function apiSend(payload) {
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok || !j.ok) {
-      toast('❌ Bot từ chối: ' + (j.error || res.status), 'error');
+      if (!silent) toast('❌ Bot từ chối: ' + (j.error || res.status), 'error');
       return false;
     }
     return true;
   } catch (e) {
-    toast('❌ Không gọi được bot: ' + e.message, 'error');
+    if (!silent) toast('❌ Không gọi được bot: ' + e.message, 'error');
     return false;
-  }
-}
-
-function botLog(text, fileUrl) {
-  const box = $('botLog');
-  if (!box) return;
-  if (text) {
-    const row = document.createElement('div');
-    row.className = 'botmsg';
-    row.textContent = text;
-    box.appendChild(row);
-  }
-  if (fileUrl) {
-    const a = document.createElement('a');
-    a.className = 'botfile';
-    a.href = API_BASE + fileUrl + '?initData=' + encodeURIComponent(INIT_DATA);
-    a.textContent = '⬇️ Tải file mod';
-    a.target = '_blank';
-    a.rel = 'noopener';
-    box.appendChild(a);
-  }
-  box.scrollTop = box.scrollHeight;
-
-  // đang thu nhỏ → tăng badge tin chưa đọc trên FAB
-  const panel = $('botPanel');
-  if (panel && (panel.hidden || !panel.classList.contains('show'))) {
-    _botUnread++;
-    const badge = $('botFabBadge');
-    if (badge) { badge.textContent = _botUnread > 9 ? '9+' : String(_botUnread); badge.classList.add('show'); }
   }
 }
 
 let _botUnread = 0;
 
-function openBotPanel(clear) {
-  const p = $('botPanel');
-  if (!p) return;
-  if (clear) { const b = $('botLog'); if (b) b.innerHTML = ''; }
-  const fab = $('botFab');
-  if (fab) fab.hidden = true;
-  _botUnread = 0;
-  const badge = $('botFabBadge');
-  if (badge) badge.classList.remove('show');
-  p.hidden = false;
-  // ép reflow rồi thêm .show để chạy animation trượt lên
-  void p.offsetWidth;
-  p.classList.add('show');
+function _onBotTab() {
+  const p = $('page-bot');
+  return p && p.classList.contains('active');
 }
 
-function minimizeBotPanel() {
-  const p = $('botPanel');
-  if (!p) return;
-  p.classList.remove('show');
-  setTimeout(() => { p.hidden = true; }, 420);
-  const fab = $('botFab');
-  if (fab) fab.hidden = false;
+function _setBotBadge() {
+  const b = $('botBadge');
+  if (!b) return;
+  if (_botUnread > 0) { b.textContent = _botUnread > 9 ? '9+' : String(_botUnread); b.removeAttribute('data-zero'); }
+  else { b.textContent = ''; b.setAttribute('data-zero', ''); }
 }
 
-function closeBotPanel() {
-  stopPolling();
-  const p = $('botPanel');
-  if (p) { p.classList.remove('show'); setTimeout(() => { p.hidden = true; }, 420); }
-  const fab = $('botFab');
-  if (fab) fab.hidden = true;
-  _botUnread = 0;
-  const badge = $('botFabBadge');
-  if (badge) badge.classList.remove('show');
+function _removeChatEmpty() {
+  const e = $('chatEmpty');
+  if (e) e.remove();
+}
+
+function _appendTyping() {
+  const box = $('botLog');
+  if (!box || $('chatTyping')) return;
+  const t = document.createElement('div');
+  t.id = 'chatTyping';
+  t.className = 'chat-typing';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  box.appendChild(t);
+  box.scrollTop = box.scrollHeight;
+}
+function _removeTyping() {
+  const t = $('chatTyping');
+  if (t) t.remove();
+}
+
+// kind: 'bot' (mặc định) | 'me' | 'sys'
+function botLog(text, fileUrl, kind) {
+  const box = $('botLog');
+  if (!box) return;
+  _removeChatEmpty();
+  _removeTyping();
+
+  if (text) {
+    if (kind === 'sys') {
+      const s = document.createElement('div');
+      s.className = 'chat-sys';
+      s.textContent = text;
+      box.appendChild(s);
+    } else {
+      const row = document.createElement('div');
+      row.className = 'chat-msg ' + (kind === 'me' ? 'me' : 'bot');
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble';
+      bubble.textContent = text;
+      row.appendChild(bubble);
+      box.appendChild(row);
+    }
+  }
+
+  if (fileUrl) {
+    const row = document.createElement('div');
+    row.className = 'chat-msg bot';
+    const a = document.createElement('a');
+    a.className = 'chat-file';
+    a.href = API_BASE + fileUrl + '?initData=' + encodeURIComponent(INIT_DATA);
+    a.innerHTML = '<span class="chat-file-ic">📦</span><span class="chat-file-tx"><b>MOD_LQ.zip</b><small>Bấm để tải file mod</small></span><span class="chat-file-dl">⬇️</span>';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    row.appendChild(a);
+    box.appendChild(row);
+  }
+
+  box.scrollTop = box.scrollHeight;
+
+  if (!_onBotTab()) { _botUnread++; _setBotBadge(); }
+}
+
+// Chuyển sang tab Bot (khung chat)
+function showBotChat(clear) {
+  if (clear) {
+    const b = $('botLog');
+    if (b) b.innerHTML = '';
+  }
+  qsa('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === 'bot'));
+  qsa('.page').forEach((p) => p.classList.toggle('active', p.id === 'page-bot'));
+  _botUnread = 0; _setBotBadge();
+  refreshChatStatus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function refreshChatStatus() {
+  const el = $('chatStatus');
+  if (!el) return;
+  if (!INIT_DATA) { el.innerHTML = '<span class="chat-dot off"></span> Mở trong Telegram'; return; }
+  if (!API_BASE) { el.innerHTML = '<span class="chat-dot off"></span> Chưa kết nối · gõ /start'; return; }
+  try {
+    const r = await fetch(API_BASE + '/api/health', { cache: 'no-store' });
+    const j = await r.json();
+    el.innerHTML = (j && j.ok)
+      ? '<span class="chat-dot"></span> Trực tuyến'
+      : '<span class="chat-dot off"></span> Mất kết nối';
+  } catch {
+    el.innerHTML = '<span class="chat-dot off"></span> Mất kết nối · /start lại';
+  }
 }
 
 function startPolling() {
@@ -396,6 +435,7 @@ qsa('.tab').forEach((btn) => {
     haptic('light');
     if (tab === 'cart') renderCart();
     if (tab === 'more') refreshSettingsLabels();
+    if (tab === 'bot') { _botUnread = 0; _setBotBadge(); refreshChatStatus(); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
@@ -757,11 +797,14 @@ $('runBtn').addEventListener('click', () => {
   if (state.settings.confetti) fireConfetti();
 
   if (API_READY) {
-    // Luồng chính: gửi qua API, phản hồi hiện ngay trong app
+    // Luồng chính: gửi qua API, phản hồi hiện trong khung chat (tab Bot)
     _pollSeq = 0;
-    openBotPanel(true);
-    botLog('📤 Đã gửi yêu cầu, đang chờ bot xử lý...');
+    showBotChat(false);
+    const n = entries.length;
+    botLog(`Chạy Mod ${n} mục: ${entries.map(([k]) => k).join(', ')}`, null, 'me');
+    botLog('Đã gửi yêu cầu, bot đang xử lý…', null, 'sys');
     startPolling();
+    _appendTyping();
     apiSend({ type: 'chaymod', items: state.cart });
   } else if (getTgUser()) {
     // Dự phòng: mở qua nút bàn phím → sendData
@@ -849,11 +892,14 @@ $('runStay').addEventListener('click', () => {
 });
 
 (() => {
-  const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', fn); };
-  on('botPanelClose', () => { haptic('light'); closeBotPanel(); });
-  on('botPanelMin',   () => { haptic('light'); minimizeBotPanel(); });
-  on('botBackdrop',   () => { haptic('light'); minimizeBotPanel(); });
-  on('botFab',        () => { haptic('light'); openBotPanel(false); });
+  const clr = $('chatClear');
+  if (clr) clr.addEventListener('click', () => {
+    if (!confirm('Xoá toàn bộ hội thoại?')) return;
+    haptic('light');
+    const b = $('botLog');
+    if (b) b.innerHTML = '<div class="chat-empty" id="chatEmpty"><div class="chat-empty-emoji">💬</div><p>Chưa có hội thoại.</p><small>Chọn skin rồi bấm <b>🚀 Chạy Mod</b> — phản hồi của bot sẽ hiện ở đây.</small></div>';
+    _botUnread = 0; _setBotBadge();
+  });
 })();
 
 /* ═══════════════════════════════════════════════════════════════
@@ -914,9 +960,10 @@ function onAdminClick(btn) {
   haptic('success');
   if (API_READY) {
     _pollSeq = 0;
-    openBotPanel(true);
-    botLog('📤 Đã gửi lệnh admin: ' + act);
+    showBotChat(false);
+    botLog('Lệnh admin: ' + act, null, 'me');
     startPolling();
+    _appendTyping();
     apiSend({ type: 'admin', action: act, args });
   } else {
     const payload = { type: 'admin', action: act, args, ts: Date.now() };
@@ -948,7 +995,21 @@ qsa('.set-card').forEach((card) => {
     const a = card.dataset.action;
     haptic('light');
     if (a === 'checkvip') {
-      if (state.isVip) {
+      if (API_READY) {
+        // Hỏi bot để có kết quả chính xác, hiện trong khung chat
+        _pollSeq = 0;
+        showBotChat(false);
+        botLog('Kiểm tra VIP', null, 'me');
+        startPolling();
+        _appendTyping();
+        apiSend({ type: 'checkvip' }, true).then((ok) => {
+          if (ok) return;
+          _removeTyping();
+          if (state.isVip) botLog(`💎 Bạn còn ${state.vipDays} ngày VIP.`, null, 'bot');
+          else if (state.isAdmin) botLog('👑 Bạn là ADMIN — quyền tối cao.', null, 'bot');
+          else botLog('❌ Bạn chưa có VIP. Liên hệ Admin để mua nhé.', null, 'bot');
+        });
+      } else if (state.isVip) {
         toast(`💎 Bạn còn ${state.vipDays} ngày VIP`, 'success');
       } else if (state.isAdmin) {
         toast('👑 Bạn là ADMIN — quyền tối cao', 'success');
@@ -956,10 +1017,10 @@ qsa('.set-card').forEach((card) => {
         toast('❌ Bạn chưa có VIP. Liên hệ Admin để mua.', 'warn');
       }
     } else if (a === 'myid') {
-      const id = tg?.initDataUnsafe?.user?.id;
-      if (!id) return toast('Không lấy được ID', 'error');
-      copyText(String(id));
-      toast(`📋 Copied: ${id}`, 'success');
+      const id = getTgUser()?.id;
+      if (!id) return toast('Không lấy được ID — hãy mở trong Telegram', 'error');
+      copyText(String(id)).then((ok) =>
+        toast(ok ? `📋 Đã copy ID: ${id}` : `🆔 ID của bạn: ${id}`, 'success'));
     } else if (a === 'haptic') {
       state.settings.haptic = !state.settings.haptic;
       saveSettings();
@@ -974,8 +1035,8 @@ qsa('.set-card').forEach((card) => {
       try { tg?.openTelegramLink?.(ADMIN_CONTACT); } catch {}
       try { tg?.openLink?.(ADMIN_CONTACT); } catch {}
     } else if (a === 'donate') {
-      copyText('109874557013');
-      toast('📋 Đã copy STK: 109874557013 — VIETINBANK', 'success');
+      copyText('109874557013').then((ok) =>
+        toast(ok ? '📋 Đã copy STK: 109874557013 — VIETINBANK' : '🏦 STK: 109874557013 — VIETINBANK', 'success'));
     } else if (a === 'reset') {
       if (!confirm('Xoá cache + giỏ + cài đặt?')) return;
       try { localStorage.clear(); } catch {}
@@ -1003,13 +1064,27 @@ function loadSettings() {
 function saveSettings() {
   try { localStorage.setItem('bannei_settings', JSON.stringify(state.settings)); } catch {}
 }
-function copyText(t) {
-  try { navigator.clipboard?.writeText(t); }
-  catch {
+async function copyText(t) {
+  // 1) Clipboard API (chỉ chạy trong secure context)
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(t);
+      return true;
+    }
+  } catch {}
+  // 2) Fallback execCommand (Telegram WebView cũ)
+  try {
     const ta = document.createElement('textarea');
-    ta.value = t; document.body.appendChild(ta);
-    ta.select(); document.execCommand('copy'); ta.remove();
-  }
+    ta.value = t;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch { return false; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
