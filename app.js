@@ -42,11 +42,37 @@ const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'MOD ROV', 'Máy Yếu', 'Nú
    - INIT_DATA: chuỗi gốc để bot xác thực (HMAC) chống giả mạo
    ═══════════════════════════════════════════════════════════════ */
 const _urlp = new URLSearchParams(location.search);
-const API_BASE = (_urlp.get('api') || '').replace(/\/+$/, '');
+let API_BASE = (_urlp.get('api') || '').replace(/\/+$/, '');
+// Nhớ địa chỉ API: mở đúng 1 lần (qua nút có ?api=) thì lần sau nút menu cũ vẫn chạy
+if (API_BASE) {
+  try { localStorage.setItem('bannei_api', API_BASE); } catch {}
+} else {
+  try { API_BASE = (localStorage.getItem('bannei_api') || '').replace(/\/+$/, ''); } catch {}
+}
 const INIT_DATA = tg?.initData || '';
 const API_READY = !!(API_BASE && INIT_DATA);
 let _pollSeq = 0;
 let _pollTimer = null;
+
+// Tự kiểm tra & báo trạng thái kết nối bot (giúp chẩn đoán "không chạy")
+async function checkApiConnection() {
+  if (!INIT_DATA) {
+    toast('⚠️ Hãy mở Mini App TRONG Telegram (nút bàn phím), không mở bằng trình duyệt.', 'error');
+    return;
+  }
+  if (!API_BASE) {
+    toast('⚠️ Chưa có địa chỉ bot. Gõ /start trong bot rồi mở lại Mini App.', 'error');
+    return;
+  }
+  try {
+    const r = await fetch(API_BASE + '/api/health', { cache: 'no-store' });
+    const j = await r.json();
+    if (j && j.ok) toast('🟢 Đã kết nối bot trực tiếp', 'success');
+    else throw new Error('bad');
+  } catch {
+    toast('⚠️ Không kết nối được bot (tunnel có thể đã đổi). Gõ /start rồi mở lại.', 'error');
+  }
+}
 
 async function apiSend(payload) {
   try {
@@ -1055,6 +1081,8 @@ tg?.onEvent?.('themeChanged', applyTheme);
   refreshSettingsLabels();
   applyTheme();
   await Promise.all([loadCatalog(), loadHeroIcons(), loadSkinCodes()]);
+
+  checkApiConnection();
 
   // sync cart from Telegram bot when inside Telegram
   if (tg?.initDataUnsafe?.user) {
