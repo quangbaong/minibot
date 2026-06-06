@@ -162,8 +162,22 @@ const NUTBAM_LIST = [
 /* ═══════════════════════════════════════════════════════════════
    TELEGRAM LOGIN + VIP / ADMIN DETECTION
    ═══════════════════════════════════════════════════════════════ */
+// Lấy user: ưu tiên initDataUnsafe, fallback parse từ initData thô.
+// Nhờ vậy nút menu / nút bàn phím đều nhận diện được, không kẹt "login gate".
+function getTgUser() {
+  if (tg?.initDataUnsafe?.user) return tg.initDataUnsafe.user;
+  try {
+    const raw = tg?.initData || '';
+    if (raw) {
+      const us = new URLSearchParams(raw).get('user');
+      if (us) return JSON.parse(us);
+    }
+  } catch {}
+  return null;
+}
+
 function loginTelegram() {
-  const u = tg?.initDataUnsafe?.user;
+  const u = getTgUser();
   if (!u) {
     $('userName').textContent = 'Mở qua Telegram';
     $('userId').textContent = 'Chưa đăng nhập';
@@ -234,11 +248,11 @@ function showWebLoginGate() {
       <div class="wlg-card">
         <div class="wlg-logo">🛡️</div>
         <h2>BANNEI MOD LQ</h2>
-        <p>Vui long mo qua <b>Telegram</b> de su dung.</p>
+        <p>Mini App này chạy <b>bên trong Telegram</b>.</p>
         <div class="wlg-buttons">
-          <a class="wlg-btn primary" href="https://t.me/MODSKINin1_bot">🤖 Mo Bot Telegram</a>
+          <a class="wlg-btn primary" href="https://t.me/MODSKINin1_bot">🤖 Mở Bot Telegram</a>
         </div>
-        <p class="wlg-hint">Sau khi mo bot, bam <b>Menu ☰ → MOD LQ</b> de mo Mini App.</p>
+        <p class="wlg-hint">Trong bot: gõ <b>/start</b> → bấm <b>☰ MOD LQ</b> (hoặc nút 🚀 Mở Mini App).</p>
       </div>
     `;
     document.body.appendChild(gate);
@@ -712,7 +726,7 @@ $('runBtn').addEventListener('click', () => {
     startPolling();
     apiSend({ type: 'chaymod', items: state.cart });
     showRunOverlay(entries.length);
-  } else if (tg?.initDataUnsafe?.user) {
+  } else if (getTgUser()) {
     // Dự phòng: mở qua nút bàn phím → sendData
     const payload = { type: 'chaymod', items: state.cart, ts: Date.now(), vip: state.isVip, admin: state.isAdmin };
     try {
@@ -819,7 +833,7 @@ function onAdminClick(btn) {
   const act = btn.dataset.act;
   const confirmMsg = btn.dataset.confirm;
   if (confirmMsg && !confirm(confirmMsg)) return;
-  if (!tg?.initDataUnsafe?.user) { showWebLoginGate(); toast('Cần mở qua Telegram!', 'error'); return; }
+  if (!getTgUser()) { showWebLoginGate(); toast('Cần mở qua Telegram!', 'error'); return; }
   if (!state.isAdmin) { toast('Bạn không phải Admin!', 'error'); haptic('error'); return; }
 
   const args = {};
@@ -1085,7 +1099,7 @@ tg?.onEvent?.('themeChanged', applyTheme);
   checkApiConnection();
 
   // sync cart from Telegram bot when inside Telegram
-  if (tg?.initDataUnsafe?.user) {
+  if (getTgUser()) {
     try {
       tg.sendData(JSON.stringify({ type: 'synccart', ts: Date.now() }));
     } catch (e) {
