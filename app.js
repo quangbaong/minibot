@@ -95,21 +95,15 @@ async function apiSend(payload, silent) {
 
 let _botUnread = 0;
 
-function _onBotTab() {
-  const p = $('page-bot');
-  return p && p.classList.contains('active');
+function _chatVisible() {
+  const p = $('botPanel');
+  return p && !p.hidden;
 }
-
-function _setBotBadge() {
-  const b = $('botBadge');
+function _setFabBadge() {
+  const b = $('chatFabBadge');
   if (!b) return;
-  if (_botUnread > 0) { b.textContent = _botUnread > 9 ? '9+' : String(_botUnread); b.removeAttribute('data-zero'); }
-  else { b.textContent = ''; b.setAttribute('data-zero', ''); }
-}
-
-function _removeChatEmpty() {
-  const e = $('chatEmpty');
-  if (e) e.remove();
+  if (_botUnread > 0) { b.textContent = _botUnread > 9 ? '9+' : String(_botUnread); b.classList.add('show'); }
+  else { b.textContent = ''; b.classList.remove('show'); }
 }
 
 function _appendTyping() {
@@ -131,7 +125,6 @@ function _removeTyping() {
 function botLog(text, fileUrl, kind) {
   const box = $('botLog');
   if (!box) return;
-  _removeChatEmpty();
   _removeTyping();
 
   if (text) {
@@ -166,20 +159,75 @@ function botLog(text, fileUrl, kind) {
 
   box.scrollTop = box.scrollHeight;
 
-  if (!_onBotTab()) { _botUnread++; _setBotBadge(); }
+  if (!_chatVisible()) { _botUnread++; _setFabBadge(); }
 }
 
-// Chuyển sang tab Bot (khung chat)
+// Mở khung chat nổi (đè lên tab hiện tại)
 function showBotChat(clear) {
-  if (clear) {
-    const b = $('botLog');
-    if (b) b.innerHTML = '';
-  }
-  qsa('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === 'bot'));
-  qsa('.page').forEach((p) => p.classList.toggle('active', p.id === 'page-bot'));
-  _botUnread = 0; _setBotBadge();
+  const p = $('botPanel');
+  if (!p) return;
+  if (clear) { const b = $('botLog'); if (b) b.innerHTML = ''; }
+  const fab = $('chatFab'); if (fab) fab.hidden = true;
+  _botUnread = 0; _setFabBadge();
+  p.classList.remove('closing');
+  p.hidden = false;
   refreshChatStatus();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function minimizeChat() {
+  const p = $('botPanel'); if (!p) return;
+  p.hidden = true;
+  const fab = $('chatFab'); if (fab) fab.hidden = false;
+}
+
+function closeChat() {
+  stopPolling();
+  const p = $('botPanel');
+  if (p) { p.classList.add('closing'); setTimeout(() => { p.hidden = true; p.classList.remove('closing'); }, 260); }
+  const fab = $('chatFab'); if (fab) fab.hidden = true;
+  _botUnread = 0; _setFabBadge();
+}
+
+// Kéo di chuyển khung chat bằng header
+function _initChatDrag() {
+  const win = $('botPanel');
+  const head = $('chatwHead');
+  if (!win || !head) return;
+  let sx = 0, sy = 0, ox = 0, oy = 0, drag = false;
+  head.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.chatw-btn')) return;   // bỏ qua nút
+    drag = true;
+    const r = win.getBoundingClientRect();
+    ox = r.left; oy = r.top; sx = e.clientX; sy = e.clientY;
+    win.style.transition = 'none';
+    try { head.setPointerCapture(e.pointerId); } catch {}
+  });
+  head.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    let nx = ox + (e.clientX - sx);
+    let ny = oy + (e.clientY - sy);
+    const mw = window.innerWidth - win.offsetWidth - 6;
+    const mh = window.innerHeight - win.offsetHeight - 6;
+    nx = Math.max(6, Math.min(nx, mw));
+    ny = Math.max(6, Math.min(ny, mh));
+    win.style.left = nx + 'px';
+    win.style.top = ny + 'px';
+    win.style.right = 'auto';
+    win.style.bottom = 'auto';
+  });
+  const end = (e) => { drag = false; win.style.transition = ''; try { head.releasePointerCapture(e.pointerId); } catch {} };
+  head.addEventListener('pointerup', end);
+  head.addEventListener('pointercancel', end);
+}
+
+// Bỏ qua tin cũ còn trong hàng đợi bot (tránh hiện lại lịch sử/trùng lặp)
+async function drainBaseline() {
+  if (!API_READY) return;
+  try {
+    const r = await fetch(API_BASE + '/api/poll?after=0&initData=' + encodeURIComponent(INIT_DATA));
+    const j = await r.json();
+    if (j.ok && Array.isArray(j.msgs)) for (const m of j.msgs) if (m.seq > _pollSeq) _pollSeq = m.seq;
+  } catch {}
 }
 
 async function refreshChatStatus() {
@@ -435,7 +483,6 @@ qsa('.tab').forEach((btn) => {
     haptic('light');
     if (tab === 'cart') renderCart();
     if (tab === 'more') refreshSettingsLabels();
-    if (tab === 'bot') { _botUnread = 0; _setBotBadge(); refreshChatStatus(); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
@@ -774,7 +821,7 @@ $('clearBtn').addEventListener('click', () => {
   if (!Object.keys(state.cart).length) return;
   if (!confirm('Xoá toàn bộ giỏ?')) return;
   state.cart = {};
-  saveCart();
+  clearCartStorage();
   updateBadge();
   renderCart();
   syncExtraCardsState();
@@ -797,8 +844,7 @@ $('runBtn').addEventListener('click', () => {
   if (state.settings.confetti) fireConfetti();
 
   if (API_READY) {
-    // Luồng chính: gửi qua API, phản hồi hiện trong khung chat (tab Bot)
-    _pollSeq = 0;
+    // Luồng chính: gửi qua API, phản hồi hiện trong khung chat nổi
     showBotChat(false);
     const n = entries.length;
     botLog(`Chạy Mod ${n} mục: ${entries.map(([k]) => k).join(', ')}`, null, 'me');
@@ -892,14 +938,11 @@ $('runStay').addEventListener('click', () => {
 });
 
 (() => {
-  const clr = $('chatClear');
-  if (clr) clr.addEventListener('click', () => {
-    if (!confirm('Xoá toàn bộ hội thoại?')) return;
-    haptic('light');
-    const b = $('botLog');
-    if (b) b.innerHTML = '<div class="chat-empty" id="chatEmpty"><div class="chat-empty-emoji">💬</div><p>Chưa có hội thoại.</p><small>Chọn skin rồi bấm <b>🚀 Chạy Mod</b> — phản hồi của bot sẽ hiện ở đây.</small></div>';
-    _botUnread = 0; _setBotBadge();
-  });
+  const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', fn); };
+  on('chatMin',   () => { haptic('light'); minimizeChat(); });
+  on('chatClose', () => { haptic('light'); closeChat(); });
+  on('chatFab',   () => { haptic('light'); showBotChat(false); });
+  _initChatDrag();
 })();
 
 /* ═══════════════════════════════════════════════════════════════
@@ -959,7 +1002,6 @@ function onAdminClick(btn) {
 
   haptic('success');
   if (API_READY) {
-    _pollSeq = 0;
     showBotChat(false);
     botLog('Lệnh admin: ' + act, null, 'me');
     startPolling();
@@ -997,7 +1039,6 @@ qsa('.set-card').forEach((card) => {
     if (a === 'checkvip') {
       if (API_READY) {
         // Hỏi bot để có kết quả chính xác, hiện trong khung chat
-        _pollSeq = 0;
         showBotChat(false);
         botLog('Kiểm tra VIP', null, 'me');
         startPolling();
@@ -1040,6 +1081,8 @@ qsa('.set-card').forEach((card) => {
     } else if (a === 'reset') {
       if (!confirm('Xoá cache + giỏ + cài đặt?')) return;
       try { localStorage.clear(); } catch {}
+      clearCartStorage();                       // xoá luôn giỏ trên Telegram CloudStorage
+      if (API_BASE) { try { localStorage.setItem('bannei_api', API_BASE); } catch {} }  // giữ kết nối bot
       state.cart = {};
       state.settings = defaultSettings();
       saveSettings();
@@ -1047,7 +1090,7 @@ qsa('.set-card').forEach((card) => {
       renderCart();
       syncExtraCardsState();
       refreshSettingsLabels();
-      toast('♻️ Đã reset', 'success');
+      toast('♻️ Đã reset sạch (giỏ + cache)', 'success');
     } else if (a === 'about') {
       toast('BANNEI MOD LQ · Liquid Glass 6.0 · 2026', 'success');
     }
@@ -1096,6 +1139,13 @@ function saveCart() {
   // Sync to Telegram CloudStorage (cross-device, cross-session)
   if (tg?.CloudStorage) {
     try { tg.CloudStorage.setItem('bannei_cart', raw); } catch {}
+  }
+}
+// Xoá SẠCH giỏ ở cả localStorage lẫn Telegram CloudStorage (chống giỏ "sống lại")
+function clearCartStorage() {
+  try { localStorage.removeItem('bannei_cart'); } catch {}
+  if (tg?.CloudStorage) {
+    try { tg.CloudStorage.removeItem('bannei_cart', () => {}); } catch {}
   }
 }
 async function loadCartLocal() {
@@ -1208,6 +1258,7 @@ tg?.onEvent?.('themeChanged', applyTheme);
   await Promise.all([loadCatalog(), loadHeroIcons(), loadSkinCodes()]);
 
   checkApiConnection();
+  drainBaseline();
 
   // sync cart from Telegram bot when inside Telegram
   if (getTgUser()) {

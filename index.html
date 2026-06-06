@@ -50,7 +50,6 @@
   <button class="tab active" data-tab="heroes"><span>🎭</span><label>Tướng</label></button>
   <button class="tab" data-tab="extras"><span>🛠️</span><label>Bổ trợ</label></button>
   <button class="tab" data-tab="cart"><span>🛒</span><label>Giỏ <em id="cartBadge" data-zero></em></label></button>
-  <button class="tab" data-tab="bot"><span>💬</span><label>Bot <em id="botBadge" data-zero></em></label></button>
   <button class="tab" data-tab="more"><span>⚙️</span><label>Khác</label></button>
   <button class="tab admin-only" data-tab="admin" hidden><span>👑</span><label>Admin</label></button>
 </nav>
@@ -213,27 +212,6 @@
     <div class="cart-actions">
       <button class="btn-ghost" id="clearBtn">🧹 Xoá hết</button>
       <button class="btn-primary" id="runBtn">🚀 Chạy Mod</button>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ BOT CHAT PAGE ═══ -->
-<section class="page" id="page-bot">
-  <div class="chat-frame">
-    <div class="chat-top">
-      <div class="chat-ava">🤖</div>
-      <div class="chat-id">
-        <h4>BANNEI Bot</h4>
-        <p id="chatStatus"><span class="chat-dot"></span> Đang kết nối…</p>
-      </div>
-      <button class="chat-clear" id="chatClear" type="button" title="Xoá hội thoại">🗑️</button>
-    </div>
-    <div class="chat-body" id="botLog">
-      <div class="chat-empty" id="chatEmpty">
-        <div class="chat-empty-emoji">💬</div>
-        <p>Chưa có hội thoại.</p>
-        <small>Chọn skin rồi bấm <b>🚀 Chạy Mod</b> — phản hồi của bot sẽ hiện ở đây.</small>
-      </div>
     </div>
   </div>
 </section>
@@ -436,6 +414,21 @@
   </div>
 </div>
 
-<script src="app.js?v=12"></script>
+<!-- ═══ FLOATING CHAT WINDOW (nổi đè lên tab hiện tại) ═══ -->
+<div class="chatw" id="botPanel" hidden>
+  <div class="chatw-head" id="chatwHead">
+    <div class="chatw-ava">🤖</div>
+    <div class="chatw-id">
+      <h4>BANNEI Bot</h4>
+      <p id="chatStatus"><span class="chat-dot"></span> Trực tuyến</p>
+    </div>
+    <button class="chatw-btn" id="chatMin" type="button" title="Thu nhỏ">▁</button>
+    <button class="chatw-btn close" id="chatClose" type="button" title="Đóng">✕</button>
+  </div>
+  <div class="chat-body" id="botLog"></div>
+</div>
+<button class="chatw-fab" id="chatFab" type="button" hidden>🤖<span class="chatw-badge" id="chatFabBadge"></span></button>
+
+<script src="app.js?v=13"></script>
 </body>
 </html>
