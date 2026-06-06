@@ -162,6 +162,25 @@ function botLog(text, fileUrl, kind) {
   if (!_chatVisible()) { _botUnread++; _setFabBadge(); }
 }
 
+// Nút liên kết (vd: 🔑 Lấy Key Kích Hoạt) — như bên Telegram
+function botLink(url, label) {
+  const box = $('botLog');
+  if (!box || !url) return;
+  _removeTyping();
+  const row = document.createElement('div');
+  row.className = 'chat-msg bot';
+  const a = document.createElement('a');
+  a.className = 'chat-link';
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.textContent = label || '🔗 Mở liên kết';
+  row.appendChild(a);
+  box.appendChild(row);
+  box.scrollTop = box.scrollHeight;
+  if (!_chatVisible()) { _botUnread++; _setFabBadge(); }
+}
+
 // Mở khung chat nổi (đè lên tab hiện tại)
 function showBotChat(clear) {
   const p = $('botPanel');
@@ -257,7 +276,8 @@ function startPolling() {
       if (j.ok && Array.isArray(j.msgs)) {
         for (const m of j.msgs) {
           if (m.seq > _pollSeq) _pollSeq = m.seq;
-          botLog(m.text, m.file);
+          if (m.text || m.file) botLog(m.text, m.file);
+          if (m.link) botLink(m.link.url, m.link.label);
         }
       }
     } catch { /* im lặng, thử lại nhịp sau */ }

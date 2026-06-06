@@ -1177,6 +1177,21 @@ body.tg-light #aurora{
 .chat-file-tx small{font-size:11px;color:rgba(255,255,255,.75)}
 .chat-file-dl{margin-left:auto;font-size:18px}
 
+/* nút liên kết (vd: Lấy Key) */
+.chat-link{
+  align-self:flex-start;max-width:86%;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 16px;
+  text-decoration:none;color:#1a1205;font-weight:800;font-size:13.5px;
+  background:linear-gradient(135deg,var(--c-amber),#ffb347);
+  border-radius:14px;
+  box-shadow:0 6px 18px rgba(255,210,95,.35);
+  animation:botmsgIn .3s var(--ease-spring) both;
+  transition:transform .18s var(--ease-spring), box-shadow .18s;
+}
+.chat-link:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(255,210,95,.5)}
+.chat-link:active{transform:scale(.97)}
+
 .chat-typing{
   align-self:flex-start;
   display:flex;gap:5px;padding:13px 15px;
