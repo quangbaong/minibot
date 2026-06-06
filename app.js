@@ -121,6 +121,38 @@ function _removeTyping() {
   if (t) t.remove();
 }
 
+function _nowTime() {
+  const d = new Date();
+  return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+}
+
+// Tạo 1 dòng tin: bot có avatar + giờ, me căn phải + giờ
+function _appendRow(kind, contentEl) {
+  const box = $('botLog');
+  if (!box) return;
+  const row = document.createElement('div');
+  row.className = 'chat-msg ' + (kind === 'me' ? 'me' : 'bot');
+
+  if (kind !== 'me') {
+    const av = document.createElement('div');
+    av.className = 'chat-ava-sm';
+    av.textContent = '🤖';
+    row.appendChild(av);
+  }
+  const col = document.createElement('div');
+  col.className = 'chat-col';
+  col.appendChild(contentEl);
+  const t = document.createElement('div');
+  t.className = 'chat-time';
+  t.textContent = _nowTime();
+  col.appendChild(t);
+  row.appendChild(col);
+
+  box.appendChild(row);
+  box.scrollTop = box.scrollHeight;
+  if (!_chatVisible()) { _botUnread++; _setFabBadge(); }
+}
+
 // kind: 'bot' (mặc định) | 'me' | 'sys'
 function botLog(text, fileUrl, kind) {
   const box = $('botLog');
@@ -133,52 +165,37 @@ function botLog(text, fileUrl, kind) {
       s.className = 'chat-sys';
       s.textContent = text;
       box.appendChild(s);
+      box.scrollTop = box.scrollHeight;
     } else {
-      const row = document.createElement('div');
-      row.className = 'chat-msg ' + (kind === 'me' ? 'me' : 'bot');
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble';
       bubble.textContent = text;
-      row.appendChild(bubble);
-      box.appendChild(row);
+      _appendRow(kind, bubble);
     }
   }
 
   if (fileUrl) {
-    const row = document.createElement('div');
-    row.className = 'chat-msg bot';
     const a = document.createElement('a');
     a.className = 'chat-file';
     a.href = API_BASE + fileUrl + '?initData=' + encodeURIComponent(INIT_DATA);
-    a.innerHTML = '<span class="chat-file-ic">📦</span><span class="chat-file-tx"><b>MOD_LQ.zip</b><small>Bấm để tải file mod</small></span><span class="chat-file-dl">⬇️</span>';
+    a.innerHTML = '<span class="chat-file-ic">📦</span><span class="chat-file-tx"><b>MOD_LQ.zip</b><small>Chạm để tải về máy</small></span><span class="chat-file-dl">⬇️</span>';
     a.target = '_blank';
     a.rel = 'noopener';
-    row.appendChild(a);
-    box.appendChild(row);
+    _appendRow('bot', a);
   }
-
-  box.scrollTop = box.scrollHeight;
-
-  if (!_chatVisible()) { _botUnread++; _setFabBadge(); }
 }
 
 // Nút liên kết (vd: 🔑 Lấy Key Kích Hoạt) — như bên Telegram
 function botLink(url, label) {
-  const box = $('botLog');
-  if (!box || !url) return;
+  if (!url) return;
   _removeTyping();
-  const row = document.createElement('div');
-  row.className = 'chat-msg bot';
   const a = document.createElement('a');
   a.className = 'chat-link';
   a.href = url;
   a.target = '_blank';
   a.rel = 'noopener';
   a.textContent = label || '🔗 Mở liên kết';
-  row.appendChild(a);
-  box.appendChild(row);
-  box.scrollTop = box.scrollHeight;
-  if (!_chatVisible()) { _botUnread++; _setFabBadge(); }
+  _appendRow('bot', a);
 }
 
 // Mở khung chat nổi (đè lên tab hiện tại)
@@ -191,6 +208,11 @@ function showBotChat(clear) {
   p.classList.remove('closing');
   p.hidden = false;
   refreshChatStatus();
+  // lời chào khi mở khung trống
+  const box = $('botLog');
+  if (box && !box.children.length) {
+    botLog('Xin chào! Mình là trợ lý BANNEI 🤖\nMọi tiến trình & file Mod sẽ hiện ngay tại đây.', null, 'bot');
+  }
 }
 
 function minimizeChat() {
@@ -867,8 +889,8 @@ $('runBtn').addEventListener('click', () => {
     // Luồng chính: gửi qua API, phản hồi hiện trong khung chat nổi
     showBotChat(false);
     const n = entries.length;
-    botLog(`Chạy Mod ${n} mục: ${entries.map(([k]) => k).join(', ')}`, null, 'me');
-    botLog('Đã gửi yêu cầu, bot đang xử lý…', null, 'sys');
+    botLog(`🚀 Chạy Mod cho ${n} mục:\n${entries.map(([k]) => '• ' + k).join('\n')}`, null, 'me');
+    botLog('Đã gửi tới hệ thống · đang xử lý', null, 'sys');
     startPolling();
     _appendTyping();
     apiSend({ type: 'chaymod', items: state.cart });
@@ -1023,7 +1045,8 @@ function onAdminClick(btn) {
   haptic('success');
   if (API_READY) {
     showBotChat(false);
-    botLog('Lệnh admin: ' + act, null, 'me');
+    botLog('⚙️ Lệnh quản trị: ' + act, null, 'me');
+    botLog('Đang thực thi', null, 'sys');
     startPolling();
     _appendTyping();
     apiSend({ type: 'admin', action: act, args });
@@ -1060,7 +1083,7 @@ qsa('.set-card').forEach((card) => {
       if (API_READY) {
         // Hỏi bot để có kết quả chính xác, hiện trong khung chat
         showBotChat(false);
-        botLog('Kiểm tra VIP', null, 'me');
+        botLog('💎 Kiểm tra hạn VIP', null, 'me');
         startPolling();
         _appendTyping();
         apiSend({ type: 'checkvip' }, true).then((ok) => {
