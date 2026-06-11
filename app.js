@@ -411,7 +411,7 @@ function showWebLoginGate() {
         <div class="wlg-buttons">
           <a class="wlg-btn primary" href="https://t.me/">🤖 Mở Bot Telegram</a>
         </div>
-        <p class="wlg-hint">Trong bot: gõ <b>/start</b> → bấm <b>☰ MOD LQ</b> (hoặc nút 🚀 Mở Mini App).</p>
+        <p class="wlg-hint">Trong bot: gõ <b>/start</b> → bấm <b>☰ Mở </b> (hoặc nút 🚀 Mở Mini App).</p>
       </div>
     `;
     document.body.appendChild(gate);
