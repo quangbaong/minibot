@@ -34,12 +34,12 @@ const state = {
   skinCodes: {},
 };
 
-const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'MOD ROV', 'Máy Yếu', 'Nút Bấm', 'Server']);
+const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'Server']);
 // Server mod — mỗi server = 1 thư mục Resources* trong BANNEI_SOURCE (khớp bot.py SERVER_LABELS).
 const SERVERS = [
   { dir: 'Resources',    label: '🇻🇳 Việt Nam (Garena)' },
   { dir: 'Resources_EU', label: '🇪🇺 Châu Âu (EU)' },
-  { dir: 'Resources_TL', label: '🇹🇭 Thái Lan (TL)' },
+  { dir: 'Resources_TH', label: '🇹🇭 Thái Lan (TH)' },
   { dir: 'Resources_TW', label: '🇹🇼 Đài Loan (TW)' },
 ];
 
@@ -317,22 +317,6 @@ function stopPolling() {
   if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
 }
 
-const NUTBAM_LIST = [
-  { id: '10620', name: 'Krixi Phù Thủy Thời Không', emoji: '🎭' },
-  { id: '14111', name: 'Lau Thứ Nguyên Vệ Thần',     emoji: '🛡️' },
-  { id: '15012', name: 'Nak Killua',                  emoji: '⚡' },
-  { id: '13118', name: 'Murad Thiên Luân',            emoji: '🏯' },
-  { id: '15015', name: 'Nak Bạch Diện',               emoji: '🎭' },
-  { id: '59901', name: 'Billow Chuyển Giao',          emoji: '🛡️' },
-  { id: '54307', name: 'Aya Công Chúa Cầu Vồng',      emoji: '⚡' },
-  { id: '15412', name: 'Yena Huyền Cửu Thiên',        emoji: '🏯' },
-  { id: '13570', name: 'Anna Clara',                  emoji: '🎭' },
-  { id: '13571', name: 'dddontfall',                  emoji: '🛡️' },
-  { id: '13572', name: 'Tiktok: chenyao',             emoji: '⚡' },
-  { id: '13573', name: 'Hinna',                       emoji: '🏯' },
-  { id: '13574', name: 'Chương Nhược Nam',            emoji: '🎭' },
-];
-
 /* ═══════════════════════════════════════════════════════════════
    TELEGRAM LOGIN + VIP / ADMIN DETECTION
    ═══════════════════════════════════════════════════════════════ */
@@ -424,7 +408,7 @@ function showWebLoginGate() {
         <h2>BANNEI MOD LQ</h2>
         <p>Mini App này chạy <b>bên trong Telegram</b>.</p>
         <div class="wlg-buttons">
-          <a class="wlg-btn primary" href="https://t.me/MODSKINin1_bot">🤖 Mở Bot Telegram</a>
+          <a class="wlg-btn primary" href="https://t.me/">🤖 Mở Bot Telegram</a>
         </div>
         <p class="wlg-hint">Trong bot: gõ <b>/start</b> → bấm <b>☰ MOD LQ</b> (hoặc nút 🚀 Mở Mini App).</p>
       </div>
@@ -711,9 +695,6 @@ qsa('.extra-card').forEach((card) => {
     haptic('medium');
     if (e === 'camxa') return openZoomPicker();
     if (e === 'hdchieu') return toggleExtra('HD Chiêu', 'HD', card);
-    if (e === 'modrov')  return toggleExtra('MOD ROV', 'rov', card);
-    if (e === 'mayyeu')  return toggleExtra('Máy Yếu', 'mayyeu', card);
-    if (e === 'nutbam')  return openNutbamPicker();
     if (e === 'server')  return openServerPicker();
   });
 });
@@ -737,7 +718,7 @@ function syncExtraCardsState() {
   qsa('.extra-card').forEach((c) => {
     const e = c.dataset.extra;
     const key = ({
-      camxa: 'Cam Xa', hdchieu: 'HD Chiêu', modrov: 'MOD ROV', mayyeu: 'Máy Yếu', nutbam: 'Nút Bấm', server: 'Server',
+      camxa: 'Cam Xa', hdchieu: 'HD Chiêu', server: 'Server',
     })[e];
     c.classList.toggle('selected', !!state.cart[key]);
   });
@@ -791,45 +772,13 @@ function openServerPicker() {
   switchExtrasPane('server');
 }
 
-function openNutbamPicker() {
-  const list = $('nutbamList');
-  list.innerHTML = '';
-  NUTBAM_LIST.forEach((n, i) => {
-    const row = document.createElement('button');
-    row.className = 'nut-cell';
-    if (state.cart['Nút Bấm'] === `nut${n.id}`) row.classList.add('selected');
-    row.innerHTML = `
-      <span class="nc-emoji">${n.emoji}</span>
-      <div>
-        <div>${escapeHtml(n.name)}</div>
-        <div class="nc-id">ID: ${n.id}</div>
-      </div>
-      <span style="color:var(--tg-hint);font-size:20px">›</span>
-    `;
-    row.style.animationDelay = `${i * 0.03}s`;
-    row.addEventListener('click', () => {
-      state.cart['Nút Bấm'] = `nut${n.id}`;
-      saveCart();
-      haptic('success');
-      toast(`✓ Nút bấm ${n.name}`, 'success');
-      syncExtraCardsState();
-      switchExtrasPane('list');
-      updateBadge();
-    });
-    list.appendChild(row);
-  });
-  switchExtrasPane('nut');
-}
-
 function switchExtrasPane(which) {
   $('extrasPane').hidden = which !== 'list';
   $('zoomPicker').hidden = which !== 'zoom';
-  $('nutbamPicker').hidden = which !== 'nut';
   $('serverPicker').hidden = which !== 'server';
 }
 
 $('zoomBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
-$('nutbamBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
 $('serverBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1353,16 +1302,16 @@ function refreshBack() {
   const heroesActive = $('page-heroes').classList.contains('active');
   const onSubHeroes = heroesActive && (!$('alphaPane').hidden === false || !$('heroListPane').hidden || !$('skinListPane').hidden);
   const extrasActive = $('page-extras').classList.contains('active');
-  const onSubExtras = extrasActive && (!$('zoomPicker').hidden || !$('nutbamPicker').hidden || !$('serverPicker').hidden);
+  const onSubExtras = extrasActive && (!$('zoomPicker').hidden || !$('serverPicker').hidden);
   const subOpen =
     (heroesActive && (!$('heroListPane').hidden || !$('skinListPane').hidden)) ||
-    (extrasActive && (!$('zoomPicker').hidden || !$('nutbamPicker').hidden));
+    (extrasActive && (!$('zoomPicker').hidden));
   if (subOpen) tg.BackButton.show(); else tg.BackButton.hide();
 }
 tg?.BackButton?.onClick?.(() => {
   if (!$('skinListPane').hidden) { switchHeroesPane('list'); haptic('light'); refreshBack(); return; }
   if (!$('heroListPane').hidden) { switchHeroesPane('alpha'); haptic('light'); refreshBack(); return; }
-  if (!$('zoomPicker').hidden || !$('nutbamPicker').hidden || !$('serverPicker').hidden) { switchExtrasPane('list'); haptic('light'); refreshBack(); return; }
+  if (!$('zoomPicker').hidden || !$('serverPicker').hidden) { switchExtrasPane('list'); haptic('light'); refreshBack(); return; }
   refreshBack();
 });
 
