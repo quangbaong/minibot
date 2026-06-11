@@ -305,6 +305,7 @@ function startPolling() {
       if (j.ok && Array.isArray(j.msgs)) {
         for (const m of j.msgs) {
           if (m.seq > _pollSeq) _pollSeq = m.seq;
+          if (m.clear) clearCartFromServer();
           if (m.text || m.file) botLog(m.text, m.file);
           if (m.link) botLink(m.link.url, m.link.label);
         }
@@ -847,6 +848,7 @@ $('clearBtn').addEventListener('click', () => {
   if (!confirm('Xoá toàn bộ giỏ?')) return;
   state.cart = {};
   clearCartStorage();
+  apiSend({ type: 'clearcart' }, true);   // xoá luôn giỏ phía server (Test JSON) cho khớp
   updateBadge();
   renderCart();
   syncExtraCardsState();
@@ -1109,6 +1111,7 @@ qsa('.set-card').forEach((card) => {
       if (!confirm('Xoá cache + giỏ + cài đặt?')) return;
       try { localStorage.clear(); } catch {}
       clearCartStorage();                       // xoá luôn giỏ trên Telegram CloudStorage
+      apiSend({ type: 'clearcart' }, true);     // xoá luôn giỏ phía server (Test JSON)
       if (API_BASE) { try { localStorage.setItem('bannei_api', API_BASE); } catch {} }  // giữ kết nối bot
       state.cart = {};
       state.settings = defaultSettings();
@@ -1174,6 +1177,16 @@ function clearCartStorage() {
   if (tg?.CloudStorage) {
     try { tg.CloudStorage.removeItem('bannei_cart', () => {}); } catch {}
   }
+}
+// Nhận tín hiệu /cleandanhsach từ chat (qua poll) → xoá giỏ local cho khớp server.
+function clearCartFromServer() {
+  const had = Object.keys(state.cart).length;
+  state.cart = {};
+  clearCartStorage();
+  updateBadge();
+  renderCart();
+  syncExtraCardsState();
+  if (had) toast('🧹 Giỏ đã được xoá (đồng bộ /cleandanhsach)', 'success');
 }
 async function loadCartLocal() {
   // 1) CloudStorage (Telegram cloud, cross-device)
