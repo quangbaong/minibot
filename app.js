@@ -34,7 +34,14 @@ const state = {
   skinCodes: {},
 };
 
-const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'MOD ROV', 'Máy Yếu', 'Nút Bấm']);
+const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'MOD ROV', 'Máy Yếu', 'Nút Bấm', 'Server']);
+// Server mod — mỗi server = 1 thư mục Resources* trong BANNEI_SOURCE (khớp bot.py SERVER_LABELS).
+const SERVERS = [
+  { dir: 'Resources',    label: '🇻🇳 Việt Nam (Garena)' },
+  { dir: 'Resources_EU', label: '🇪🇺 Châu Âu (EU)' },
+  { dir: 'Resources_TL', label: '🇹🇭 Thái Lan (TL)' },
+  { dir: 'Resources_TW', label: '🇹🇼 Đài Loan (TW)' },
+];
 
 /* ═══════════════════════════════════════════════════════════════
    WEB ↔ BOT API BRIDGE  (1 luồng: gửi lệnh + nhận phản hồi tại chỗ)
@@ -707,6 +714,7 @@ qsa('.extra-card').forEach((card) => {
     if (e === 'modrov')  return toggleExtra('MOD ROV', 'rov', card);
     if (e === 'mayyeu')  return toggleExtra('Máy Yếu', 'mayyeu', card);
     if (e === 'nutbam')  return openNutbamPicker();
+    if (e === 'server')  return openServerPicker();
   });
 });
 
@@ -729,7 +737,7 @@ function syncExtraCardsState() {
   qsa('.extra-card').forEach((c) => {
     const e = c.dataset.extra;
     const key = ({
-      camxa: 'Cam Xa', hdchieu: 'HD Chiêu', modrov: 'MOD ROV', mayyeu: 'Máy Yếu', nutbam: 'Nút Bấm',
+      camxa: 'Cam Xa', hdchieu: 'HD Chiêu', modrov: 'MOD ROV', mayyeu: 'Máy Yếu', nutbam: 'Nút Bấm', server: 'Server',
     })[e];
     c.classList.toggle('selected', !!state.cart[key]);
   });
@@ -757,6 +765,30 @@ function openZoomPicker() {
     grid.appendChild(b);
   }
   switchExtrasPane('zoom');
+}
+
+function openServerPicker() {
+  const grid = $('serverGrid');
+  grid.innerHTML = '';
+  SERVERS.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'zoom-cell';
+    b.textContent = s.label;
+    if ((state.cart['Server'] || 'Resources') === s.dir) b.classList.add('selected');
+    b.style.animationDelay = `${i * 0.03}s`;
+    b.addEventListener('click', () => {
+      if (s.dir === 'Resources') delete state.cart['Server'];  // VN = mặc định, không cần lưu
+      else state.cart['Server'] = s.dir;
+      saveCart();
+      haptic('success');
+      toast(`✓ Server: ${s.label}`, 'success');
+      syncExtraCardsState();
+      switchExtrasPane('list');
+      updateBadge();
+    });
+    grid.appendChild(b);
+  });
+  switchExtrasPane('server');
 }
 
 function openNutbamPicker() {
@@ -793,10 +825,12 @@ function switchExtrasPane(which) {
   $('extrasPane').hidden = which !== 'list';
   $('zoomPicker').hidden = which !== 'zoom';
   $('nutbamPicker').hidden = which !== 'nut';
+  $('serverPicker').hidden = which !== 'server';
 }
 
 $('zoomBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
 $('nutbamBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
+$('serverBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
 
 /* ═══════════════════════════════════════════════════════════════
    CART
@@ -1319,7 +1353,7 @@ function refreshBack() {
   const heroesActive = $('page-heroes').classList.contains('active');
   const onSubHeroes = heroesActive && (!$('alphaPane').hidden === false || !$('heroListPane').hidden || !$('skinListPane').hidden);
   const extrasActive = $('page-extras').classList.contains('active');
-  const onSubExtras = extrasActive && (!$('zoomPicker').hidden || !$('nutbamPicker').hidden);
+  const onSubExtras = extrasActive && (!$('zoomPicker').hidden || !$('nutbamPicker').hidden || !$('serverPicker').hidden);
   const subOpen =
     (heroesActive && (!$('heroListPane').hidden || !$('skinListPane').hidden)) ||
     (extrasActive && (!$('zoomPicker').hidden || !$('nutbamPicker').hidden));
@@ -1328,7 +1362,7 @@ function refreshBack() {
 tg?.BackButton?.onClick?.(() => {
   if (!$('skinListPane').hidden) { switchHeroesPane('list'); haptic('light'); refreshBack(); return; }
   if (!$('heroListPane').hidden) { switchHeroesPane('alpha'); haptic('light'); refreshBack(); return; }
-  if (!$('zoomPicker').hidden || !$('nutbamPicker').hidden) { switchExtrasPane('list'); haptic('light'); refreshBack(); return; }
+  if (!$('zoomPicker').hidden || !$('nutbamPicker').hidden || !$('serverPicker').hidden) { switchExtrasPane('list'); haptic('light'); refreshBack(); return; }
   refreshBack();
 });
 
