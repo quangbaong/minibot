@@ -1020,6 +1020,7 @@ function onAdminClick(btn) {
     case 'batkey':
     case 'statuskey':
     case 'listvip':
+    case 'capnhat':
       break;
   }
 
