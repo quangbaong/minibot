@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   BANNEI MOD LQ — LIQUID GLASS 6.0 · app.js
+   BANNEI MOD LQ — LIQUID GLASS 6.1 · app.js
    ═══════════════════════════════════════════════════════════════ */
 
 const tg = window.Telegram?.WebApp;
@@ -860,12 +860,7 @@ $('runBtn').addEventListener('click', () => {
   const entries = Object.entries(state.cart);
   if (!entries.length) { toast('Giỏ trống!', 'error'); haptic('error'); return; }
 
-  // validation: Cam Xa only — must have ≥1 skin
-  const onlyExtras = entries.every(([k]) => EXTRA_KEYS.has(k));
-  const hasSkin = entries.some(([k]) => !EXTRA_KEYS.has(k));
-  if (state.cart['Cam Xa'] && !hasSkin && onlyExtras) {
-    if (!confirm('⚠️ Cam Xa cần ít nhất 1 Skin để áp dụng. Vẫn gửi?')) return;
-  }
+  // Cam Xa mod được riêng lẻ (không cần Skin) — tool_run.py đã hỗ trợ, gửi thẳng.
 
   haptic('success');
   if (state.settings.confetti) fireConfetti();
@@ -1122,7 +1117,7 @@ qsa('.set-card').forEach((card) => {
       refreshSettingsLabels();
       toast('♻️ Đã reset sạch (giỏ + cache)', 'success');
     } else if (a === 'about') {
-      toast('BANNEI MOD LQ · Liquid Glass 6.0 · 2026', 'success');
+      toast('BANNEI MOD LQ · Liquid Glass 6.1 · 2026', 'success');
     }
   });
 });

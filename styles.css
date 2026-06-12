@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   BANNEI MOD LQ — LIQUID GLASS 6.0
+   BANNEI MOD LQ — LIQUID GLASS 6.1
    ═══════════════════════════════════════════════════════════════ */
 
 :root{
@@ -20,15 +20,20 @@
   --c-cyan:    #5ed5ff;
   --c-danger:  #ff5577;
 
-  /* glass tokens */
-  --glass-1: rgba(255,255,255,0.05);
-  --glass-2: rgba(255,255,255,0.085);
-  --glass-3: rgba(255,255,255,0.12);
-  --glass-bd: rgba(255,255,255,0.10);
-  --glass-bd-hi: rgba(255,255,255,0.22);
-  --glass-shd: 0 10px 36px rgba(0,0,0,.42);
-  --glass-inner: inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(0,0,0,.18);
-  --refraction: 0 0 0 .5px rgba(255,255,255,.07), 0 1px 0 rgba(255,255,255,.10) inset;
+  /* glass tokens — Liquid Glass material */
+  --glass-1: rgba(255,255,255,0.06);
+  --glass-2: rgba(255,255,255,0.10);
+  --glass-3: rgba(255,255,255,0.145);
+  --glass-bd: rgba(255,255,255,0.12);
+  --glass-bd-hi: rgba(255,255,255,0.26);
+  --glass-shd: 0 4px 14px rgba(0,0,0,.30), 0 16px 40px rgba(0,0,0,.42);
+  --glass-inner: inset 0 1px 0 rgba(255,255,255,.20), inset 0 -1px 0 rgba(0,0,0,.20);
+  /* edge lensing: crisp top specular + soft bottom shade + hairline ring */
+  --refraction:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    inset 0 -1px 1px rgba(0,0,0,.16),
+    0 0 0 .5px rgba(255,255,255,.06);
+  --glass-blur: blur(22px) saturate(1.6);
 
   /* radii */
   --r-xl: 24px;
@@ -102,8 +107,8 @@ body{
   background:linear-gradient(135deg, rgba(108,140,255,.22), rgba(177,108,255,.16) 60%, rgba(255,107,154,.14));
   border:1px solid var(--glass-bd-hi);
   border-radius:var(--r-lg);
-  backdrop-filter:blur(22px) saturate(1.4);
-  -webkit-backdrop-filter:blur(22px) saturate(1.4);
+  backdrop-filter:blur(24px) saturate(1.7);
+  -webkit-backdrop-filter:blur(24px) saturate(1.7);
   box-shadow:var(--glass-shd), var(--refraction);
   animation:slideDown .7s var(--ease-out) both;
   overflow:hidden;
@@ -185,8 +190,8 @@ body{
   left:14px;right:14px;z-index:200;
   display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
   padding:6px;
-  background:rgba(14,16,25,.72);
-  backdrop-filter:blur(26px) saturate(1.4);-webkit-backdrop-filter:blur(26px) saturate(1.4);
+  background:rgba(14,16,25,.62);
+  backdrop-filter:blur(30px) saturate(1.7);-webkit-backdrop-filter:blur(30px) saturate(1.7);
   border:1px solid var(--glass-bd-hi);
   border-radius:22px;
   box-shadow:0 14px 44px rgba(0,0,0,.55), var(--refraction);
@@ -627,7 +632,7 @@ main{padding:6px 14px 50px}
 .btn-primary{
   background:linear-gradient(135deg,var(--c-iris),var(--c-violet));
   color:#fff;
-  box-shadow:0 8px 24px rgba(108,140,255,.55), inset 0 1px 0 rgba(255,255,255,.28);
+  box-shadow:0 8px 24px rgba(108,140,255,.55), inset 0 1px 0 rgba(255,255,255,.34), inset 0 -1px 1px rgba(0,0,0,.18);
 }
 .btn-primary::before{
   content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
@@ -690,7 +695,7 @@ main{padding:6px 14px 50px}
   padding:11px 20px;border-radius:14px;font-size:13px;font-weight:600;
   border:1px solid var(--glass-bd-hi);
   box-shadow:0 14px 40px rgba(0,0,0,.5);
-  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);
   opacity:0;pointer-events:none;
   transition:all .35s var(--ease-spring);
   z-index:1000;max-width:88%;text-align:center;
