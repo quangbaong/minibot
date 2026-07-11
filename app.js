@@ -411,7 +411,7 @@ function showWebLoginGate() {
         <div class="wlg-buttons">
           <a class="wlg-btn primary" href="https://t.me/">🤖 Mở Bot Telegram</a>
         </div>
-        <p class="wlg-hint">Trong bot: gõ <b>/start</b> → bấm <b>☰ Mở </b> (hoặc nút 🚀 Mở Mini App).</p>
+        <p class="wlg-hint">Trong bot: gõ <b>/start</b> → bấm <b>☰ Mở </b>.</p>
       </div>
     `;
     document.body.appendChild(gate);
@@ -481,29 +481,47 @@ async function loadSkinCodes() {
   } catch {}
 }
 
+/**
+ * Icon CDN Garena KGVN
+ *  - List / UI  : chỉ hiện prefix 130
+ *  - API file   : {cdn}{prefix}{variant}head.jpg
+ *      default  → 301300head.jpg  (logic 30_1300)
+ *      skin 09  → 301309head.jpg
+ */
 function getHeroIconUrl(heroName, skinName) {
   const info = state.heroIcons[heroName];
-  if (!info || !info.prefix) return '';
-  const CDN = '30'; // fixed game-version CDN prefix
+  // fallback HERO_PREFIX nếu json chưa load
+  const prefix = (info && info.prefix) || HERO_PREFIX[heroName] || '';
+  if (!prefix) return '';
+  const CDN = (info && info.cdn_id) || state.heroIcons._cdn_id || '30';
+  let variant = 0; // default portrait = ...0head.jpg
   if (skinName) {
     const skinCode = state.skinCodes[heroName + '|' + skinName];
-    if (skinCode && skinCode.length >= 5) {
-      // Skin code format: XXXYY — hero prefix (3) + variant (2)
-      // CDN URL uses variant as integer (no leading zero): 08→8, 15→15
-      const variant = parseInt(skinCode.slice(-2), 10);
-      return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + info.prefix + variant + 'head.jpg';
+    if (skinCode && String(skinCode).length >= 4) {
+      // 13009 → variant 9 ; 13019 → 19 (bỏ leading zero)
+      const tail = String(skinCode).slice(prefix.length) || String(skinCode).slice(-2);
+      const n = parseInt(tail, 10);
+      if (!Number.isNaN(n)) variant = n;
     }
-    // fallback: hero portrait
-    return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + info.prefix + 'head.jpg';
   }
-  // hero portrait (no skin)
-  return 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/' + CDN + info.prefix + 'head.jpg';
+  // file thật: 301300head.jpg  — user gọi logic là 30_1300
+  return `https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/${CDN}${prefix}${variant}head.jpg`;
+}
+
+function heroDisplayId(heroName) {
+  const info = state.heroIcons[heroName];
+  return (info && (info.display_id || info.prefix)) || HERO_PREFIX[heroName] || '';
 }
 
 function heroIconImg(heroName, skinName, cls) {
   const url = getHeroIconUrl(heroName, skinName);
   if (!url) return '';
-  return `<img class="${cls || 'hi-avatar'}" src="${url}" alt="" loading="lazy" onerror="this.outerHTML=''">`;
+  // Fallback: default ...0head.jpg 403 → thử ...1head.jpg; vẫn fail → emoji
+  const onerr =
+    "if(!this.dataset.fb){this.dataset.fb='1';this.src=this.src.replace(/0head\\.jpg$/,'1head.jpg');return;}" +
+    "this.style.display='none';if(!this.nextElementSibling||!this.nextElementSibling.classList.contains('hc-icon-fb'))" +
+    "this.insertAdjacentHTML('afterend','<span class=\\'hc-icon-fb\\'>🎭</span>');";
+  return `<img class="${cls || 'hi-avatar'}" src="${url}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="${onerr}">`;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -552,10 +570,17 @@ function openLetter(L) {
   folders.forEach((f, i) => {
     const skins = state.catalog[f] || [];
     const cell = document.createElement('button');
-    cell.className = 'hero-cell';
+    cell.className = 'hero-cell hero-card';
     if (state.cart[f]) cell.classList.add('has-skin');
     const iconHtml = heroIconImg(f, null, 'hc-icon') || '<span class="hc-icon-fb">🎭</span>';
-    cell.innerHTML = `${iconHtml}${escapeHtml(f)}<span class="hc-skins">${skins.length} skin</span>`;
+    const hid = heroDisplayId(f);
+    cell.innerHTML = `
+      <div class="hc-ava-wrap">${iconHtml}</div>
+      <div class="hc-meta">
+        <span class="hc-name">${escapeHtml(f)}</span>
+        <span class="hc-skins">${skins.length} skin${hid ? ` · <em class="hc-id">#${escapeHtml(hid)}</em>` : ''}</span>
+      </div>
+      <span class="hc-chev">›</span>`;
     cell.style.animationDelay = `${Math.min(i, 30) * 0.025}s`;
     cell.addEventListener('click', () => openHero(f));
     grid.appendChild(cell);
@@ -567,8 +592,16 @@ function openHero(folder) {
   state.currentHero = folder;
   haptic('medium');
   const skins = state.catalog[folder] || [];
+  const hid = heroDisplayId(folder);
   $('skinListTitle').textContent = folder;
-  $('skinListSub').textContent = skins.length ? `${skins.length} skin có sẵn` : 'Chưa có skin';
+  $('skinListSub').textContent = skins.length
+    ? `${skins.length} skin có sẵn${hid ? ` · ID ${hid}` : ''}`
+    : 'Chưa có skin';
+  // banner icon tướng
+  const head = $('skinListTitle');
+  if (head && !head.dataset.iconBound) {
+    // keep plain title; icon sits in grid
+  }
   const grid = $('skinGrid');
   grid.innerHTML = '';
   grid.className = 'skin-grid icon-mode';
@@ -580,10 +613,12 @@ function openHero(folder) {
       cell.className = 'skin-icon-cell';
       if (state.cart[folder] === s) cell.classList.add('selected');
       const skIcon = heroIconImg(folder, s, 'sk-portrait');
+      const code = state.skinCodes[folder + '|' + s] || '';
       const shortName = s.replace(folder + ' ', '');
       cell.innerHTML = `
-        ${skIcon || `<span class="sk-portrait-fb">🎭</span>`}
+        <div class="sk-ava">${skIcon || `<span class="sk-portrait-fb">🎭</span>`}</div>
         <span class="sk-label">${escapeHtml(shortName)}</span>
+        ${code ? `<span class="sk-code">${escapeHtml(code)}</span>` : ''}
         <span class="sk-check">✓</span>
       `;
       cell.style.animationDelay = `${Math.min(i, 20) * 0.03}s`;
