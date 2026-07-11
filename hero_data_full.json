@@ -1034,6 +1034,10 @@
       "19312"
     ]
   },
+  "Edras": {
+    "prefix": "194",
+    "skins": []
+  },
   "Enzo": {
     "prefix": "195",
     "skins": [
@@ -1731,6 +1735,26 @@
       "56801",
       "56802"
     ]
+  },
+  "Flowborn": {
+    "prefix": "577",
+    "skins": []
+  },
+  "Tamyn": {
+    "prefix": "582",
+    "skins": []
+  },
+  "CiYuansheshou": {
+    "prefix": "584",
+    "skins": []
+  },
+  "MaChao": {
+    "prefix": "593",
+    "skins": []
+  },
+  "LiXin": {
+    "prefix": "595",
+    "skins": []
   },
   "Goverra": {
     "prefix": "596",

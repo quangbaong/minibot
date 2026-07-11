@@ -36,14 +36,22 @@ minibot/
 
 ## Build / Deploy (3 bước)
 
-### 1) Generate catalog + hero icons
+### 1) Sync skin từ id_skinnn.txt
 ```bash
-py build_catalog.py
 py minibot/build_hero_data.py
 ```
-- `build_hero_data.py` đọc `id_skinnn.txt` → cập nhật `hero_data_full.json`, `hero_icons.json`, `skin_codes.json`
-- Icon list hiện **#130**; CDN file = `30`+`130`+`0` → `301300head.jpg` (logic `30_1300`)
-Mỗi lần thêm/xoá tướng hoặc skin → chạy lại.
+Đọc `id_skinnn.txt` → cập nhật:
+- `catalog.json` (UI list skin)
+- `hero_data_full.json`, `hero_icons.json`, `skin_codes.json`
+- `Sources_Bot/<hero>/gốc.txt` + `sources.txt` (bot chaymod)
+
+Icon list hiện **#130**; CDN = `301300head.jpg` (logic `30_1300`).
+
+Chỉ JSON minibot (không đụng Sources_Bot):
+```bash
+py minibot/build_hero_data.py --no-sources
+```
+Mỗi lần thêm/xoá skin trong `id_skinnn.txt` → chạy lại.
 
 ### 2) Push GitHub Pages
 ```bash

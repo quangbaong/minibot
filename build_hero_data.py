@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-build_hero_data.py — Auto sinh data icon/skin cho Mini App từ id_skinnn.txt
+build_hero_data.py — Auto sync skin/icon từ id_skinnn.txt
 
-Sinh ra:
-  minibot/hero_data_full.json
-  minibot/hero_icons.json
-  minibot/skin_codes.json
+Sinh / cập nhật:
+  minibot/hero_data_full.json   — prefix + list skin code
+  minibot/hero_icons.json       — icon CDN (display 130 · api 30_1300)
+  minibot/skin_codes.json       — "Airi|Airi Mỵ hồ" → "13009"
+  minibot/catalog.json          — list skin name cho Mini App (UI)
+  Sources_Bot/<hero>/gốc.txt    — -->13009 : Airi Mỵ hồ  (bot chaymod)
+  Sources_Bot/<hero>/sources.txt— Airi Mỵ hồ
 
 Nguyên lý icon CDN (Garena KGVN):
-  Hiển thị / list  : hero id = 130
-  API file name    : {cdn}{prefix}{variant}head.jpg
-                     ví dụ default  → 301300head.jpg  (logic 30_1300)
-                     skin 13009     → 301309head.jpg
-  cdn_id mặc định  : 30
+  list  : 130
+  file  : {cdn}{prefix}{variant}head.jpg  → 301300head.jpg (logic 30_1300)
 
-Cách chạy (từ root project hoặc minibot/):
+Cách chạy:
   py minibot/build_hero_data.py
   py minibot/build_hero_data.py --id-file id_skinnn.txt
+  py minibot/build_hero_data.py --no-sources   # chỉ minibot JSON, không ghi Sources_Bot
 """
 from __future__ import annotations
 
@@ -29,8 +30,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MINIBOT = Path(__file__).resolve().parent
+SOURCES_BOT = ROOT / "Sources_Bot"
 DEFAULT_ID_FILE = ROOT / "id_skinnn.txt"
 CDN_ID = "30"
+# 3 id đặc biệt — bỏ qua (không vào catalog / Sources_Bot)
+SKIP_PREFIXES = frozenset({"797", "798", "799"})
 
 # Fallback map name → prefix (đồng bộ app.js HERO_PREFIX)
 HERO_PREFIX_FALLBACK = {
@@ -146,7 +150,24 @@ def resolve_vn_name(prefix: str, skins: list, name_to_prefix: dict[str, str], ca
     return None
 
 
-def build(id_file: Path) -> dict:
+def write_sources_bot(hero_name: str, skins: list[tuple[str, str]]) -> None:
+    """
+    Cập nhật Sources_Bot/<hero>/ từ list skin id_skinnn:
+      gốc.txt    : -->13009 : Airi Mỵ hồ\\r\\n  (có thể rỗng nếu chưa có skin)
+      sources.txt: Airi Mỵ hồ\\r\\n
+    """
+    folder = SOURCES_BOT / hero_name
+    folder.mkdir(parents=True, exist_ok=True)
+    goc_lines = []
+    src_lines = []
+    for code, sname in skins:
+        goc_lines.append(f"-->{code} : {sname}\r\n")
+        src_lines.append(f"{sname}\r\n")
+    (folder / "gốc.txt").write_bytes("".join(goc_lines).encode("utf-8"))
+    (folder / "sources.txt").write_bytes("".join(src_lines).encode("utf-8"))
+
+
+def build(id_file: Path, write_sources: bool = True) -> dict:
     if not id_file.is_file():
         raise FileNotFoundError(f"Không thấy {id_file}")
 
@@ -158,10 +179,10 @@ def build(id_file: Path) -> dict:
             catalog_keys = list(json.loads(cat_path.read_text(encoding="utf-8")).keys())
         except Exception:
             pass
-    if not catalog_keys:
-        sb = ROOT / "Sources_Bot"
-        if sb.is_dir():
-            catalog_keys = [d for d in os.listdir(sb) if (sb / d).is_dir()]
+    if SOURCES_BOT.is_dir():
+        for d in os.listdir(SOURCES_BOT):
+            if (SOURCES_BOT / d).is_dir() and d not in catalog_keys:
+                catalog_keys.append(d)
 
     parsed = parse_id_skinnn(id_file)
     hero_data: dict = {}
@@ -171,51 +192,97 @@ def build(id_file: Path) -> dict:
         "_url_tpl": "https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/{cdn}{prefix}{variant}head.jpg",
     }
     skin_codes: dict = {}
+    catalog: dict[str, list[str]] = {}
+    # giữ extras nếu catalog cũ có (không phải hero)
+    if cat_path.is_file():
+        try:
+            old_cat = json.loads(cat_path.read_text(encoding="utf-8"))
+            for k, v in old_cat.items():
+                if k in ("Cam Xa", "HD Chiêu", "Server") or not isinstance(v, list):
+                    catalog[k] = v
+        except Exception:
+            pass
 
     skipped = []
+    empty_skin_heroes = []
+    forced_skip = []
+    sources_written = 0
     for h in parsed:
         prefix = h["prefix"]
         skins = h["skins"]
-        if not skins:
-            skipped.append(h["code"])
+        if prefix in SKIP_PREFIXES:
+            forced_skip.append(h.get("code") or prefix)
             continue
+        # VẪN thêm hero dù chưa có skin (vd 593_MaChao)
         name = resolve_vn_name(prefix, skins, name_to_prefix, catalog_keys)
         if not name:
-            # fallback: dùng internal code
-            name = h["internal"]
-            skipped.append(f"{h['code']}→? used internal name")
+            if skins and skins[0][1].split():
+                name = skins[0][1].split()[0]
+            else:
+                # internal từ id_skinnn: 593_MaChao → MaChao
+                name = h.get("internal") or f"Hero{prefix}"
+            skipped.append(f"{h['code']}→ name: {name}")
+
+        if not skins:
+            empty_skin_heroes.append(f"{prefix} ({name})")
+
+        # cập nhật map để resolve hero sau ổn định
+        name_to_prefix[name] = prefix
+        if name not in catalog_keys:
+            catalog_keys.append(name)
 
         hero_data[name] = {
             "prefix": prefix,
             "skins": [code for code, _ in skins],
         }
-        # list hiện 130; API logic 30_1300
         hero_icons[name] = {
             "cdn_id": CDN_ID,
             "prefix": prefix,
-            "api_key": f"{CDN_ID}_{prefix}0",  # 30_1300
-            "display_id": prefix,              # 130
+            "api_key": f"{CDN_ID}_{prefix}0",
+            "display_id": prefix,
         }
+
+        # catalog = list tên skin (UI Mini App) — rỗng nếu chưa có skin
+        skin_names: list[str] = []
+        seen_names: set[str] = set()
         for code, sname in skins:
             skin_codes[f"{name}|{sname}"] = code
+            if sname not in seen_names:
+                seen_names.add(sname)
+                skin_names.append(sname)
+        catalog[name] = skin_names
+
+        if write_sources:
+            write_sources_bot(name, skins)
+            sources_written += 1
+
+    # sort catalog hero keys (extras giữ đầu nếu có)
+    extras = {k: catalog.pop(k) for k in list(catalog.keys()) if k in ("Cam Xa", "HD Chiêu", "Server")}
+    catalog_sorted = {**extras, **{k: catalog[k] for k in sorted(catalog.keys(), key=lambda x: x.lower())}}
 
     return {
         "hero_data": hero_data,
         "hero_icons": hero_icons,
         "skin_codes": skin_codes,
+        "catalog": catalog_sorted,
         "stats": {
             "heroes_src": len(parsed),
             "heroes_out": len(hero_data),
             "skins": len(skin_codes),
-            "skipped_empty": skipped,
+            "catalog_heroes": len(catalog_sorted),
+            "sources_written": sources_written,
+            "empty_skin_heroes": empty_skin_heroes,
+            "forced_skip": forced_skip,
+            "name_notes": skipped,
         },
     }
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Build minibot hero/skin icon data from id_skinnn.txt")
+    ap = argparse.ArgumentParser(description="Sync minibot + Sources_Bot skins from id_skinnn.txt")
     ap.add_argument("--id-file", default=str(DEFAULT_ID_FILE), help="Path to id_skinnn.txt")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--no-sources", action="store_true", help="Không ghi Sources_Bot (chỉ JSON minibot)")
     args = ap.parse_args()
 
     try:
@@ -223,14 +290,22 @@ def main() -> int:
     except Exception:
         pass
 
-    out = build(Path(args.id_file))
+    out = build(Path(args.id_file), write_sources=not args.no_sources)
     st = out["stats"]
-    print(f"📥 Heroes src : {st['heroes_src']}")
-    print(f"📤 Heroes out : {st['heroes_out']}")
-    print(f"🎨 Skins      : {st['skins']}")
-    if st["skipped_empty"]:
-        print(f"⏭️  Skip empty/unknown ({len(st['skipped_empty'])}):")
-        for s in st["skipped_empty"][:20]:
+    print(f"📥 Heroes src     : {st['heroes_src']}")
+    print(f"📤 Heroes out     : {st['heroes_out']}")
+    print(f"🎨 Skins (codes)  : {st['skins']}")
+    print(f"📚 Catalog heroes : {st['catalog_heroes']}")
+    print(f"📁 Sources_Bot    : {st['sources_written']} folder")
+    if st.get("forced_skip"):
+        print(f"🚫 Bỏ qua (SKIP_PREFIXES): {', '.join(st['forced_skip'])}")
+    if st.get("empty_skin_heroes"):
+        print(f"📭 Hero chưa có skin (vẫn thêm): {len(st['empty_skin_heroes'])}")
+        for s in st["empty_skin_heroes"]:
+            print(f"   - {s}")
+    if st.get("name_notes"):
+        print(f"📝 Name resolve notes ({len(st['name_notes'])}):")
+        for s in st["name_notes"][:25]:
             print(f"   - {s}")
 
     if args.dry_run:
@@ -241,6 +316,7 @@ def main() -> int:
         MINIBOT / "hero_data_full.json": out["hero_data"],
         MINIBOT / "hero_icons.json": out["hero_icons"],
         MINIBOT / "skin_codes.json": out["skin_codes"],
+        MINIBOT / "catalog.json": out["catalog"],
     }
     for path, data in files.items():
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -251,6 +327,7 @@ def main() -> int:
     print(f"  api_key : {CDN_ID}_1300")
     print(f"  portrait: https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/{CDN_ID}1300head.jpg")
     print(f"  skin 09 : https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/{CDN_ID}1309head.jpg")
+    print("\nGợi ý: sau khi sửa id_skinnn.txt → chạy lại lệnh này.")
     return 0
 
 

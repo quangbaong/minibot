@@ -404,6 +404,12 @@
     "api_key": "30_1930",
     "display_id": "193"
   },
+  "Edras": {
+    "cdn_id": "30",
+    "prefix": "194",
+    "api_key": "30_1940",
+    "display_id": "194"
+  },
   "Enzo": {
     "cdn_id": "30",
     "prefix": "195",
@@ -715,6 +721,36 @@
     "prefix": "568",
     "api_key": "30_5680",
     "display_id": "568"
+  },
+  "Flowborn": {
+    "cdn_id": "30",
+    "prefix": "577",
+    "api_key": "30_5770",
+    "display_id": "577"
+  },
+  "Tamyn": {
+    "cdn_id": "30",
+    "prefix": "582",
+    "api_key": "30_5820",
+    "display_id": "582"
+  },
+  "CiYuansheshou": {
+    "cdn_id": "30",
+    "prefix": "584",
+    "api_key": "30_5840",
+    "display_id": "584"
+  },
+  "MaChao": {
+    "cdn_id": "30",
+    "prefix": "593",
+    "api_key": "30_5930",
+    "display_id": "593"
+  },
+  "LiXin": {
+    "cdn_id": "30",
+    "prefix": "595",
+    "api_key": "30_5950",
+    "display_id": "595"
   },
   "Goverra": {
     "cdn_id": "30",
