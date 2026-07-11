@@ -732,6 +732,8 @@ qsa('.extra-card').forEach((card) => {
     if (e === 'camxa') return openZoomPicker();
     if (e === 'hdchieu') return toggleExtra('HD Chiêu', 'HD', card);
     if (e === 'server')  return openServerPicker();
+    if (e === 'random')  return openRandomPicker();
+    if (e === 'idlist')  return openIdListPicker();
   });
 });
 
@@ -812,10 +814,209 @@ function switchExtrasPane(which) {
   $('extrasPane').hidden = which !== 'list';
   $('zoomPicker').hidden = which !== 'zoom';
   $('serverPicker').hidden = which !== 'server';
+  const rp = $('randomPicker');
+  const ip = $('idListPicker');
+  if (rp) rp.hidden = which !== 'random';
+  if (ip) ip.hidden = which !== 'idlist';
 }
 
 $('zoomBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
 $('serverBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
+if ($('randomBack')) $('randomBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
+if ($('idListBack')) $('idListBack').addEventListener('click', () => { switchExtrasPane('list'); haptic('light'); });
+
+/* ═══════════════════════════════════════════════════════════════
+   RANDOM SKIN + PASTE ID LIST
+   ═══════════════════════════════════════════════════════════════ */
+function buildSkinIdIndex() {
+  // code → { folder, skin }
+  const byId = {};
+  for (const [key, code] of Object.entries(state.skinCodes || {})) {
+    if (!code) continue;
+    const i = key.indexOf('|');
+    if (i < 0) continue;
+    const folder = key.slice(0, i);
+    const skin = key.slice(i + 1);
+    byId[String(code)] = { folder, skin, code: String(code) };
+  }
+  return byId;
+}
+
+function getHeroSkinPool() {
+  // hero → [skinName, ...] từ catalog, chỉ hero có skin
+  const pool = [];
+  for (const [folder, skins] of Object.entries(state.catalog || {})) {
+    if (EXTRA_KEYS.has(folder)) continue;
+    if (!Array.isArray(skins) || !skins.length) continue;
+    pool.push({ folder, skins: skins.slice() });
+  }
+  return pool;
+}
+
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/** Xoá skin tướng khỏi cart, giữ Cam Xa / HD / Server */
+function clearHeroSkinsFromCart() {
+  for (const k of Object.keys(state.cart)) {
+    if (!EXTRA_KEYS.has(k)) delete state.cart[k];
+  }
+}
+
+/**
+ * randomN: lấy N hero khác nhau, mỗi hero 1 skin ngẫu nhiên.
+ */
+function applyRandomSkins(n) {
+  n = Math.max(1, Math.min(120, parseInt(n, 10) || 0));
+  if (!n) { toast('Số lượng không hợp lệ', 'error'); return; }
+  const pool = getHeroSkinPool();
+  if (!pool.length) {
+    toast('Catalog trống — chưa load được skin', 'error');
+    return;
+  }
+  if (n > pool.length) {
+    toast(`Chỉ có ${pool.length} tướng — random tối đa ${pool.length}`, 'error');
+    n = pool.length;
+  }
+  shuffleInPlace(pool);
+  const picked = pool.slice(0, n);
+  clearHeroSkinsFromCart();
+  for (const h of picked) {
+    const skin = h.skins[Math.floor(Math.random() * h.skins.length)];
+    state.cart[h.folder] = skin;
+  }
+  saveCart();
+  updateBadge();
+  syncExtraCardsState();
+  haptic('success');
+  toast(`🎲 Random ${picked.length} skin (1 / hero)`, 'success');
+  // mở giỏ để xem
+  qsa('.tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === 'cart'));
+  qsa('.page').forEach((p) => p.classList.toggle('active', p.id === 'page-cart'));
+  renderCart();
+  switchExtrasPane('list');
+}
+
+function openRandomPicker() {
+  switchExtrasPane('random');
+}
+
+function openIdListPicker() {
+  switchExtrasPane('idlist');
+  const prev = $('idListPreview');
+  if (prev) prev.hidden = true;
+}
+
+/** Parse "15009, 11106\\n10620" → codes */
+function parseSkinIdList(text) {
+  if (!text) return [];
+  const raw = String(text).match(/\d{4,6}/g) || [];
+  // ưu tiên 5 số (skin id chuẩn)
+  const codes = [];
+  const seen = new Set();
+  for (const t of raw) {
+    let c = t;
+    if (t.length === 4) c = t; // keep
+    if (t.length > 5) c = t.slice(0, 5); // safety
+    if (seen.has(c)) continue;
+    seen.add(c);
+    codes.push(c);
+  }
+  return codes;
+}
+
+/**
+ * Map list ID → cart (1 hero 1 skin; ID sau ghi đè cùng hero).
+ * Giữ extras.
+ */
+function applyIdListToCart(text, { replaceHeroes = true } = {}) {
+  const codes = parseSkinIdList(text);
+  if (!codes.length) {
+    toast('Không thấy mã skin hợp lệ', 'error');
+    return null;
+  }
+  const index = buildSkinIdIndex();
+  const ok = [];
+  const bad = [];
+  const mapped = {}; // folder → { skin, code }
+
+  for (const code of codes) {
+    const hit = index[code];
+    if (!hit) {
+      bad.push(code);
+      continue;
+    }
+    mapped[hit.folder] = { skin: hit.skin, code };
+    ok.push({ code, folder: hit.folder, skin: hit.skin });
+  }
+
+  if (replaceHeroes) clearHeroSkinsFromCart();
+  for (const [folder, info] of Object.entries(mapped)) {
+    state.cart[folder] = info.skin;
+  }
+  saveCart();
+  updateBadge();
+  syncExtraCardsState();
+
+  const prev = $('idListPreview');
+  if (prev) {
+    prev.hidden = false;
+    const lines = [];
+    lines.push(`<b class="ok">✓ Thêm ${ok.length} skin</b> · bỏ qua ${bad.length}`);
+    ok.slice(0, 40).forEach((x) => {
+      lines.push(`<span class="ok">${escapeHtml(x.code)}</span> → ${escapeHtml(x.folder)}`);
+    });
+    if (ok.length > 40) lines.push(`… +${ok.length - 40} nữa`);
+    if (bad.length) {
+      lines.push(`<b class="bad">✗ Không map được:</b> ${bad.slice(0, 20).map(escapeHtml).join(', ')}${bad.length > 20 ? '…' : ''}`);
+    }
+    prev.innerHTML = lines.join('<br>');
+  }
+
+  if (ok.length) {
+    haptic('success');
+    toast(`➕ ${ok.length} ID → giỏ${bad.length ? ` · ${bad.length} lỗi` : ''}`, 'success');
+  } else {
+    haptic('error');
+    toast('Không map được ID nào (cần chạy build_hero_data?)', 'error');
+  }
+  return { ok, bad };
+}
+
+// wire random UI
+const _randChips = $('randChips');
+if (_randChips) {
+  qsa('button[data-n]', _randChips).forEach((b) => {
+    b.addEventListener('click', () => {
+      const n = b.dataset.n;
+      if ($('randInput')) $('randInput').value = n;
+      applyRandomSkins(n);
+    });
+  });
+}
+if ($('randApply')) {
+  $('randApply').addEventListener('click', () => {
+    applyRandomSkins($('randInput')?.value || 30);
+  });
+}
+if ($('idListApply')) {
+  $('idListApply').addEventListener('click', () => {
+    applyIdListToCart($('idListInput')?.value || '', { replaceHeroes: true });
+  });
+}
+if ($('idListClear')) {
+  $('idListClear').addEventListener('click', () => {
+    if ($('idListInput')) $('idListInput').value = '';
+    const prev = $('idListPreview');
+    if (prev) { prev.hidden = true; prev.innerHTML = ''; }
+    haptic('light');
+  });
+}
 
 /* ═══════════════════════════════════════════════════════════════
    CART
@@ -1346,16 +1547,31 @@ function refreshBack() {
   const heroesActive = $('page-heroes').classList.contains('active');
   const onSubHeroes = heroesActive && (!$('alphaPane').hidden === false || !$('heroListPane').hidden || !$('skinListPane').hidden);
   const extrasActive = $('page-extras').classList.contains('active');
-  const onSubExtras = extrasActive && (!$('zoomPicker').hidden || !$('serverPicker').hidden);
+  const onSubExtras = extrasActive && (
+    !$('zoomPicker').hidden ||
+    !$('serverPicker').hidden ||
+    ($('randomPicker') && !$('randomPicker').hidden) ||
+    ($('idListPicker') && !$('idListPicker').hidden)
+  );
   const subOpen =
     (heroesActive && (!$('heroListPane').hidden || !$('skinListPane').hidden)) ||
-    (extrasActive && (!$('zoomPicker').hidden));
+    onSubExtras;
   if (subOpen) tg.BackButton.show(); else tg.BackButton.hide();
 }
 tg?.BackButton?.onClick?.(() => {
   if (!$('skinListPane').hidden) { switchHeroesPane('list'); haptic('light'); refreshBack(); return; }
   if (!$('heroListPane').hidden) { switchHeroesPane('alpha'); haptic('light'); refreshBack(); return; }
-  if (!$('zoomPicker').hidden || !$('serverPicker').hidden) { switchExtrasPane('list'); haptic('light'); refreshBack(); return; }
+  if (
+    !$('zoomPicker').hidden ||
+    !$('serverPicker').hidden ||
+    ($('randomPicker') && !$('randomPicker').hidden) ||
+    ($('idListPicker') && !$('idListPicker').hidden)
+  ) {
+    switchExtrasPane('list');
+    haptic('light');
+    refreshBack();
+    return;
+  }
   refreshBack();
 });
 

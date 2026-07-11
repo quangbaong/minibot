@@ -9,7 +9,7 @@
 <title>BANNEI MOD LQ</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=9">
+<link rel="stylesheet" href="styles.css?v=10">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -47,11 +47,26 @@
 
 <!-- ═══ BOTTOM TAB NAV ═══ -->
 <nav class="tabs" id="tabsBar">
-  <button class="tab active" data-tab="heroes"><span>🎭</span><label>Tướng</label></button>
-  <button class="tab" data-tab="extras"><span>🛠️</span><label>Bổ trợ</label></button>
-  <button class="tab" data-tab="cart"><span>🛒</span><label>Giỏ <em id="cartBadge" data-zero></em></label></button>
-  <button class="tab" data-tab="more"><span>⚙️</span><label>Khác</label></button>
-  <button class="tab admin-only" data-tab="admin" hidden><span>👑</span><label>Admin</label></button>
+  <button class="tab active" data-tab="heroes">
+    <span class="tab-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.2 4.5 5 .7-3.6 3.5.9 5L12 14.8 7.5 16.7l.9-5L4.8 8.2l5-.7L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.2" fill="currentColor" opacity=".35"/></svg></span>
+    <label>Tướng</label>
+  </button>
+  <button class="tab" data-tab="extras">
+    <span class="tab-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.7"/></svg></span>
+    <label>Bổ trợ</label>
+  </button>
+  <button class="tab" data-tab="cart">
+    <span class="tab-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h2l1.2 9.2a2 2 0 0 0 2 1.8h7.6a2 2 0 0 0 2-1.7L20 8H7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="19.5" r="1.4" fill="currentColor"/><circle cx="17" cy="19.5" r="1.4" fill="currentColor"/></svg></span>
+    <label>Giỏ <em id="cartBadge" data-zero></em></label>
+  </button>
+  <button class="tab" data-tab="more">
+    <span class="tab-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M18 6l-1.4 1.4M7.4 16.6 6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+    <label>Khác</label>
+  </button>
+  <button class="tab admin-only" data-tab="admin" hidden>
+    <span class="tab-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 17 7 7l5 3 5-3 2 10H5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 17v2h8v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+    <label>Admin</label>
+  </button>
 </nav>
 
 <main>
@@ -114,7 +129,9 @@
 
     <div class="extras-list" id="extrasList">
       <div class="extra-card" data-extra="camxa">
-        <div class="extra-icon">📷</div>
+        <div class="extra-icon ei-cam">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M4 9.5h2.2l1.3-2h9l1.3 2H20a1.5 1.5 0 0 1 1.5 1.5v7A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18v-7A1.5 1.5 0 0 1 4 9.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </div>
         <div class="extra-body">
           <h4>Cam Xa</h4>
           <p>Tuỳ chỉnh tầm zoom 105% → 295%</p>
@@ -122,7 +139,9 @@
         <span class="chevron">›</span>
       </div>
       <div class="extra-card" data-extra="hdchieu">
-        <div class="extra-icon">🎥</div>
+        <div class="extra-icon ei-hd">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M17 10l4-2v8l-4-2V10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 12h4M9 10v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
         <div class="extra-body">
           <h4>HD Chiêu</h4>
           <p>Hiệu ứng kỹ năng sắc nét hơn</p>
@@ -130,11 +149,35 @@
         <span class="chevron">›</span>
       </div>
       <div class="extra-card" data-extra="server">
-        <div class="extra-icon">🌐</div>
+        <div class="extra-icon ei-server">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 12h17M12 3.5c2.5 2.8 3.8 5.6 3.8 8.5S14.5 17.7 12 20.5C9.5 17.7 8.2 14.9 8.2 12S9.5 6.3 12 3.5z" stroke="currentColor" stroke-width="1.5"/></svg>
+        </div>
         <div class="extra-body">
           <h4>Đổi Server</h4>
           <p>VN / EU / Thái / Đài Loan</p>
         </div>
+        <span class="chevron">›</span>
+      </div>
+      <div class="extra-card" data-extra="random">
+        <div class="extra-icon ei-rand">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h4l3 5-3 5H4l3-5-3-5zM16 7h4l-3 5 3 5h-4l-3-5 3-5z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M9 4l2 3M13 17l2 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="extra-body">
+          <h4>Random Skin</h4>
+          <p>random30 / random50 — 1 skin / 1 hero</p>
+        </div>
+        <span class="badge-new">NEW</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="extra-card" data-extra="idlist">
+        <div class="extra-icon ei-id">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="extra-body">
+          <h4>Gửi list ID</h4>
+          <p>15009, 11106, 10620… → thêm vào giỏ</p>
+        </div>
+        <span class="badge-new">NEW</span>
         <span class="chevron">›</span>
       </div>
     </div>
@@ -162,6 +205,53 @@
       </div>
     </div>
     <div class="zoom-grid" id="serverGrid"></div>
+  </div>
+
+  <!-- Random skins -->
+  <div class="picker-pane" id="randomPicker" hidden>
+    <button class="back-btn" id="randomBack">‹ Quay lại</button>
+    <div class="page-head">
+      <div>
+        <h2>Random Skin</h2>
+        <p>Mỗi tướng chỉ 1 skin — không trùng hero</p>
+      </div>
+    </div>
+    <div class="tool-panel glass-panel">
+      <div class="tool-hint">Chọn nhanh số lượng (hoặc nhập tùy ý)</div>
+      <div class="rand-chips" id="randChips">
+        <button type="button" data-n="10">random10</button>
+        <button type="button" data-n="20">random20</button>
+        <button type="button" data-n="30" class="hot">random30</button>
+        <button type="button" data-n="50" class="hot">random50</button>
+        <button type="button" data-n="80">random80</button>
+      </div>
+      <div class="rand-custom">
+        <label for="randInput">Số skin</label>
+        <input id="randInput" type="number" min="1" max="120" value="30" inputmode="numeric" />
+        <button type="button" class="btn-primary" id="randApply">🎲 Random ngay</button>
+      </div>
+      <p class="tool-note">Giữ nguyên Cam Xa / HD / Server đã chọn. Chỉ thay skin tướng trong giỏ.</p>
+    </div>
+  </div>
+
+  <!-- Paste ID list -->
+  <div class="picker-pane" id="idListPicker" hidden>
+    <button class="back-btn" id="idListBack">‹ Quay lại</button>
+    <div class="page-head">
+      <div>
+        <h2>Gửi list ID</h2>
+        <p>Dán mã skin (5 số), cách nhau bởi dấu phẩy / xuống dòng</p>
+      </div>
+    </div>
+    <div class="tool-panel glass-panel">
+      <textarea id="idListInput" rows="7" placeholder="15009, 11106, 10620&#10;13009&#10;52414" spellcheck="false"></textarea>
+      <div class="idlist-actions">
+        <button type="button" class="btn-ghost" id="idListClear">Xoá ô</button>
+        <button type="button" class="btn-primary" id="idListApply">➕ Thêm vào giỏ</button>
+      </div>
+      <div class="idlist-preview" id="idListPreview" hidden></div>
+      <p class="tool-note">1 hero chỉ giữ 1 skin — ID sau ghi đè ID trước cùng tướng. ID không có trong catalog sẽ bị bỏ qua.</p>
+    </div>
   </div>
 
 </section>
@@ -278,9 +368,9 @@
       <div class="set-icon" style="background:linear-gradient(135deg,#5ed5ff,#6c8cff)">ℹ️</div>
       <div>
         <h5>BANNEI MOD LQ</h5>
-        <p>Liquid Glass 6.1 · v2026.06</p>
+        <p>Liquid Glass 6.2 · random + ID list</p>
       </div>
-      <span class="set-val" id="versionVal">v6.1</span>
+      <span class="set-val" id="versionVal">v6.2</span>
     </div>
 
   </div>
@@ -421,6 +511,6 @@
 </div>
 <button class="chatw-fab" id="chatFab" type="button" hidden>🤖<span class="chatw-badge" id="chatFabBadge"></span></button>
 
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>
