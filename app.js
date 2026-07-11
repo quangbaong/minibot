@@ -491,32 +491,34 @@ async function loadSkinCodes() {
 
 /**
  * Icon CDN Garena KGVN
- *  - List / UI  : chỉ hiện prefix 130
- *  - API file   : {cdn}{prefix}{variant}head.jpg
- *      default  → 301300head.jpg  (logic 30_1300)
- *      skin 09  → 301309head.jpg
- *  - Một số hero không có ...0head.jpg trên CDN (Omega 1140, Nakroth 1500,
- *    Natalya 1420, …) → dùng default_variant từ hero_icons.json (1142 / 1501 / 1421).
+ *  - Hero default (variant 0) : {cdn}{prefix}0.jpg
+ *      Nakroth → 301500.jpg · Omega → 301140.jpg
+ *  - Skin id ≥ 1            : {cdn}{prefix}{variant}head.jpg
+ *      Nakroth skin 01 → 301501head.jpg · skin 09 → 301509head.jpg
+ *  - Không có file → ICON_FALLBACK (301140.jpg)
  */
+const ICON_CDN_BASE = 'https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/';
+const ICON_FALLBACK = ICON_CDN_BASE + '301140.jpg'; // Omega default — luôn có trên CDN
+
 function getHeroIconUrl(heroName, skinName) {
   const info = state.heroIcons[heroName];
-  // fallback HERO_PREFIX nếu json chưa load
   const prefix = (info && info.prefix) || HERO_PREFIX[heroName] || '';
-  if (!prefix) return '';
+  if (!prefix) return ICON_FALLBACK;
   const CDN = (info && info.cdn_id) || state.heroIcons._cdn_id || '30';
-  // default portrait: ưu tiên default_variant (CDN probe), không hardcode 0
-  let variant = (info && Number.isFinite(+info.default_variant)) ? (+info.default_variant) : 0;
+  let variant = 0;
   if (skinName) {
     const skinCode = state.skinCodes[heroName + '|' + skinName];
     if (skinCode && String(skinCode).length >= 4) {
-      // 13009 → variant 9 ; 13019 → 19 (bỏ leading zero)
+      // 15001 → 1 ; 13009 → 9 ; 13019 → 19
       const tail = String(skinCode).slice(prefix.length) || String(skinCode).slice(-2);
       const n = parseInt(tail, 10);
       if (!Number.isNaN(n)) variant = n;
     }
   }
-  // file thật: 301300head.jpg  — user gọi logic là 30_1300
-  return `https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/${CDN}${prefix}${variant}head.jpg`;
+  const id = `${CDN}${prefix}${variant}`;
+  // hero mặc định: 301500.jpg — skin từ 1: 301501head.jpg
+  if (variant <= 0) return `${ICON_CDN_BASE}${id}.jpg`;
+  return `${ICON_CDN_BASE}${id}head.jpg`;
 }
 
 function heroDisplayId(heroName) {
@@ -524,28 +526,34 @@ function heroDisplayId(heroName) {
   return (info && (info.display_id || info.prefix)) || HERO_PREFIX[heroName] || '';
 }
 
-// onerror an toàn: thử variant +1,+2,+3 rồi mới SVG (Omega cần 2)
+// onerror: skin head→.jpg ; rồi ICON_FALLBACK
 window.__hiFb = function (el) {
   if (!el) return;
-  const step = parseInt(el.dataset.fb || '0', 10) || 0;
-  const src = String(el.src || '');
-  const m = src.match(/(\d+)head\.jpg$/i);
-  if (m && step < 3) {
-    el.dataset.fb = String(step + 1);
-    const next = parseInt(m[1], 10) + 1;
-    el.src = src.replace(/(\d+)head\.jpg$/i, `${next}head.jpg`);
+  if (el.dataset.fbDone === '1') {
+    el.style.display = 'none';
     return;
   }
-  el.style.display = 'none';
-  if (!el.nextElementSibling || !el.nextElementSibling.classList.contains('hc-icon-fb')) {
-    el.insertAdjacentHTML('afterend', svgIcon(SVG_HERO, 'hc-icon-fb'));
+  const step = parseInt(el.dataset.fb || '0', 10) || 0;
+  const src = String(el.src || '');
+  // skin: 301501head.jpg 403 → thử 301501.jpg
+  if (step === 0 && /head\.jpg$/i.test(src)) {
+    el.dataset.fb = '1';
+    el.src = src.replace(/head\.jpg$/i, '.jpg');
+    return;
   }
+  // hero: 30xxx0.jpg 403 → thử head (hiếm)
+  if (step === 0 && /\d+\.jpg$/i.test(src) && !/head\.jpg$/i.test(src)) {
+    el.dataset.fb = '1';
+    el.src = src.replace(/\.jpg$/i, 'head.jpg');
+    return;
+  }
+  // hết cách → icon mặc định 301140.jpg
+  el.dataset.fbDone = '1';
+  el.src = ICON_FALLBACK;
 };
 
 function heroIconImg(heroName, skinName, cls) {
-  const url = getHeroIconUrl(heroName, skinName);
-  if (!url) return '';
-  // Fallback: ...Nhead.jpg 403 → N+1 → N+2 → N+3 → SVG
+  const url = getHeroIconUrl(heroName, skinName) || ICON_FALLBACK;
   return `<img class="${cls || 'hi-avatar'}" src="${url}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="__hiFb(this)">`;
 }
 

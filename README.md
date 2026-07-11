@@ -45,7 +45,9 @@ py minibot/build_hero_data.py
 - `hero_data_full.json`, `hero_icons.json`, `skin_codes.json`
 - `Sources_Bot/<hero>/gốc.txt` + `sources.txt` (bot chaymod)
 
-Icon list hiện **#130**; CDN = `301300head.jpg` (logic `30_1300`).
+Icon CDN:
+- **Hero** (default): `301500.jpg` — `{cdn}{prefix}0.jpg`
+- **Skin** (id ≥ 1): `301501head.jpg` — `{cdn}{prefix}{n}head.jpg`
 
 Chỉ JSON minibot (không đụng Sources_Bot):
 ```bash
