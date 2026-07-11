@@ -37,11 +37,19 @@ const state = {
 const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'Server']);
 // Server mod — mỗi server = 1 thư mục Resources* trong BANNEI_SOURCE (khớp bot.py SERVER_LABELS).
 const SERVERS = [
-  { dir: 'Resources',    label: '🇻🇳 Việt Nam (Garena)' },
-  { dir: 'Resources_EU', label: '🇪🇺 Châu Âu (EU)' },
-  { dir: 'Resources_TH', label: '🇹🇭 Thái Lan (TH)' },
-  { dir: 'Resources_TW', label: '🇹🇼 Đài Loan (TW)' },
+  { dir: 'Resources',    label: 'VN · Việt Nam (Garena)' },
+  { dir: 'Resources_EU', label: 'EU · Châu Âu' },
+  { dir: 'Resources_TH', label: 'TH · Thái Lan' },
+  { dir: 'Resources_TW', label: 'TW · Đài Loan' },
 ];
+
+/* SVG icon helpers (thay emoji cũ) */
+const SVG_HERO = `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.2 4.5 5 .7-3.6 3.5.9 5L12 14.8 7.5 16.7l.9-5L4.8 8.2l5-.7L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const SVG_TOOL = `<svg viewBox="0 0 24 24" fill="none"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17v3h3l5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-2.5 2.5-2.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+const SVG_SEARCH = `<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.7"/><path d="M16 16l4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
+function svgIcon(svg, cls = 'hc-icon-fb') {
+  return `<span class="${cls} ico-svg">${svg}</span>`;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    WEB ↔ BOT API BRIDGE  (1 luồng: gửi lệnh + nhận phản hồi tại chỗ)
@@ -513,15 +521,25 @@ function heroDisplayId(heroName) {
   return (info && (info.display_id || info.prefix)) || HERO_PREFIX[heroName] || '';
 }
 
+// onerror an toàn (không nhét SVG vào attribute)
+window.__hiFb = function (el) {
+  if (!el) return;
+  if (!el.dataset.fb) {
+    el.dataset.fb = '1';
+    el.src = String(el.src || '').replace(/0head\.jpg$/i, '1head.jpg');
+    return;
+  }
+  el.style.display = 'none';
+  if (!el.nextElementSibling || !el.nextElementSibling.classList.contains('hc-icon-fb')) {
+    el.insertAdjacentHTML('afterend', svgIcon(SVG_HERO, 'hc-icon-fb'));
+  }
+};
+
 function heroIconImg(heroName, skinName, cls) {
   const url = getHeroIconUrl(heroName, skinName);
   if (!url) return '';
-  // Fallback: default ...0head.jpg 403 → thử ...1head.jpg; vẫn fail → emoji
-  const onerr =
-    "if(!this.dataset.fb){this.dataset.fb='1';this.src=this.src.replace(/0head\\.jpg$/,'1head.jpg');return;}" +
-    "this.style.display='none';if(!this.nextElementSibling||!this.nextElementSibling.classList.contains('hc-icon-fb'))" +
-    "this.insertAdjacentHTML('afterend','<span class=\\'hc-icon-fb\\'>🎭</span>');";
-  return `<img class="${cls || 'hi-avatar'}" src="${url}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="${onerr}">`;
+  // Fallback: ...0head.jpg 403 → ...1head.jpg → SVG
+  return `<img class="${cls || 'hi-avatar'}" src="${url}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="__hiFb(this)">`;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -572,7 +590,7 @@ function openLetter(L) {
     const cell = document.createElement('button');
     cell.className = 'hero-cell hero-card';
     if (state.cart[f]) cell.classList.add('has-skin');
-    const iconHtml = heroIconImg(f, null, 'hc-icon') || '<span class="hc-icon-fb">🎭</span>';
+    const iconHtml = heroIconImg(f, null, 'hc-icon') || svgIcon(SVG_HERO, 'hc-icon-fb');
     const hid = heroDisplayId(f);
     cell.innerHTML = `
       <div class="hc-ava-wrap">${iconHtml}</div>
@@ -606,7 +624,7 @@ function openHero(folder) {
   grid.innerHTML = '';
   grid.className = 'skin-grid icon-mode';
   if (!skins.length) {
-    grid.innerHTML = `<div class="empty"><div class="empty-icon">🎭</div><p>Tướng này chưa có skin trong catalog.</p></div>`;
+    grid.innerHTML = `<div class="empty"><div class="empty-icon ei-svg">${SVG_HERO}</div><p>Tướng này chưa có skin trong catalog.</p></div>`;
   } else {
     skins.forEach((s, i) => {
       const cell = document.createElement('button');
@@ -616,7 +634,7 @@ function openHero(folder) {
       const code = state.skinCodes[folder + '|' + s] || '';
       const shortName = s.replace(folder + ' ', '');
       cell.innerHTML = `
-        <div class="sk-ava">${skIcon || `<span class="sk-portrait-fb">🎭</span>`}</div>
+        <div class="sk-ava">${skIcon || svgIcon(SVG_HERO, 'sk-portrait-fb')}</div>
         <span class="sk-label">${escapeHtml(shortName)}</span>
         ${code ? `<span class="sk-code">${escapeHtml(code)}</span>` : ''}
         <span class="sk-check">✓</span>
@@ -690,7 +708,7 @@ function doHeroSearch(qRaw) {
   }
   wrap.innerHTML = '';
   if (!hits.length) {
-    wrap.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><p>Không tìm thấy "<b>${escapeHtml(qRaw)}</b>"</p></div>`;
+    wrap.innerHTML = `<div class="empty"><div class="empty-icon ei-svg">${SVG_SEARCH}</div><p>Không tìm thấy "<b>${escapeHtml(qRaw)}</b>"</p></div>`;
   } else {
     hits.slice(0, 50).forEach((h, i) => {
       const row = document.createElement('div');
@@ -698,7 +716,7 @@ function doHeroSearch(qRaw) {
       row.style.animationDelay = `${Math.min(i, 20) * 0.02}s`;
       if (h.type === 'hero') {
         const srIcon = heroIconImg(h.folder, null, 'sr-icon');
-        row.innerHTML = `${srIcon}<div><b>${highlight(h.folder, qRaw)}</b><div class="meta">🎭 Mở danh sách skin</div></div><span class="chev">›</span>`;
+        row.innerHTML = `${srIcon}<div><b>${highlight(h.folder, qRaw)}</b><div class="meta">Mở danh sách skin</div></div><span class="chev">›</span>`;
         row.addEventListener('click', () => {
           $('heroSearch').value = '';
           $('heroSearchClr').hidden = true;
@@ -912,22 +930,38 @@ function openIdListPicker() {
   if (prev) prev.hidden = true;
 }
 
-/** Parse "15009, 11106\\n10620" → codes */
+/** Chuẩn hoá text nhập/dán: fullwidth digits, zero-width, ký tự lạ */
+function normalizeIdText(text) {
+  return String(text || '')
+    .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, ' ')
+    .replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .replace(/[|；;、，]/g, ',')
+    .replace(/[^\d,\s\n\r.\/\-]+/g, ' ');
+}
+
+/** Parse "15009, 11106\\n10620" hoặc dán hỗn hợp → codes */
 function parseSkinIdList(text) {
   if (!text) return [];
-  const raw = String(text).match(/\d{4,6}/g) || [];
-  // ưu tiên 5 số (skin id chuẩn)
+  const cleaned = normalizeIdText(text);
+  // Ưu tiên cụm 5 số (skin id chuẩn AOV); vẫn nhận 4–6
+  const raw = cleaned.match(/\d{4,6}/g) || [];
   const codes = [];
   const seen = new Set();
   for (const t of raw) {
     let c = t;
-    if (t.length === 4) c = t; // keep
-    if (t.length > 5) c = t.slice(0, 5); // safety
+    if (t.length === 6) c = t.slice(0, 5);
     if (seen.has(c)) continue;
     seen.add(c);
     codes.push(c);
   }
   return codes;
+}
+
+function updateIdListLive(text) {
+  const live = $('idListLive');
+  if (!live) return;
+  const n = parseSkinIdList(text).length;
+  live.innerHTML = `Đã nhận: <b>${n}</b> mã`;
 }
 
 /**
@@ -1006,7 +1040,15 @@ if ($('randApply')) {
 }
 if ($('idListApply')) {
   $('idListApply').addEventListener('click', () => {
-    applyIdListToCart($('idListInput')?.value || '', { replaceHeroes: true });
+    const el = $('idListInput');
+    if (el) el.value = normalizeIdText(el.value);
+    applyIdListToCart(el?.value || '', { replaceHeroes: true });
+    // sau khi thêm → mở giỏ xem
+    if (Object.keys(state.cart).some((k) => !EXTRA_KEYS.has(k))) {
+      qsa('.tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === 'cart'));
+      qsa('.page').forEach((p) => p.classList.toggle('active', p.id === 'page-cart'));
+      renderCart();
+    }
   });
 }
 if ($('idListClear')) {
@@ -1014,7 +1056,54 @@ if ($('idListClear')) {
     if ($('idListInput')) $('idListInput').value = '';
     const prev = $('idListPreview');
     if (prev) { prev.hidden = true; prev.innerHTML = ''; }
+    updateIdListLive('');
     haptic('light');
+  });
+}
+if ($('idListPaste')) {
+  $('idListPaste').addEventListener('click', async () => {
+    const el = $('idListInput');
+    if (!el) return;
+    try {
+      let text = '';
+      if (navigator.clipboard?.readText) {
+        text = await navigator.clipboard.readText();
+      } else {
+        // fallback: focus textarea để user Ctrl+V
+        el.focus();
+        toast('Dán bằng Ctrl+V / giữ để paste', 'success');
+        return;
+      }
+      if (!text) { toast('Clipboard trống', 'error'); return; }
+      const cur = el.value.trim();
+      el.value = normalizeIdText(cur ? (cur + '\n' + text) : text);
+      updateIdListLive(el.value);
+      haptic('success');
+      toast('Đã dán list ID', 'success');
+    } catch {
+      el.focus();
+      toast('Không đọc được clipboard — hãy dán tay (Ctrl+V)', 'error');
+    }
+  });
+}
+// gõ / dán realtime
+if ($('idListInput')) {
+  const el = $('idListInput');
+  el.addEventListener('input', () => updateIdListLive(el.value));
+  el.addEventListener('paste', () => {
+    // sau khi browser paste xong mới normalize
+    setTimeout(() => {
+      const start = el.selectionStart;
+      el.value = normalizeIdText(el.value);
+      updateIdListLive(el.value);
+      try { el.setSelectionRange(start, start); } catch {}
+    }, 0);
+  });
+  el.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      $('idListApply')?.click();
+    }
   });
 }
 
@@ -1049,8 +1138,8 @@ function renderCart() {
     div.className = 'cart-item' + (isExtra ? ' extra' : '');
     div.style.animationDelay = `${Math.min(i, 15) * 0.04}s`;
     const cartIconHtml = isExtra
-      ? '<div class="cart-icon">🛠️</div>'
-      : (heroIconImg(k, v, 'cart-avatar') || '<div class="cart-icon">🎭</div>');
+      ? `<div class="cart-icon ico-svg">${SVG_TOOL}</div>`
+      : (heroIconImg(k, v, 'cart-avatar') || `<div class="cart-icon ico-svg">${SVG_HERO}</div>`);
     div.innerHTML = `
       ${cartIconHtml}
       <div>

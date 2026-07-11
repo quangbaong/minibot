@@ -9,7 +9,7 @@
 <title>BANNEI MOD LQ</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=11">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -84,9 +84,9 @@
     </div>
 
     <div class="search-box">
-      <span class="sb-icon">🔍</span>
+      <span class="sb-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.7"/><path d="M16 16l4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
       <input id="heroSearch" type="search" placeholder="Tìm tướng hoặc skin..." autocomplete="off" enterkeyhint="search" />
-      <button class="clr" id="heroSearchClr" type="button" aria-label="Clear" hidden>✕</button>
+      <button class="clr" id="heroSearchClr" type="button" aria-label="Clear" hidden>×</button>
     </div>
 
     <div class="alpha-grid" id="alphaGrid"></div>
@@ -228,7 +228,7 @@
       <div class="rand-custom">
         <label for="randInput">Số skin</label>
         <input id="randInput" type="number" min="1" max="120" value="30" inputmode="numeric" />
-        <button type="button" class="btn-primary" id="randApply">🎲 Random ngay</button>
+        <button type="button" class="btn-primary" id="randApply"><span class="btn-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h4l3 5-3 5H4l3-5-3-5zM16 7h4l-3 5 3 5h-4l-3-5 3-5z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg></span> Random ngay</button>
       </div>
       <p class="tool-note">Giữ nguyên Cam Xa / HD / Server đã chọn. Chỉ thay skin tướng trong giỏ.</p>
     </div>
@@ -244,13 +244,15 @@
       </div>
     </div>
     <div class="tool-panel glass-panel">
-      <textarea id="idListInput" rows="7" placeholder="15009, 11106, 10620&#10;13009&#10;52414" spellcheck="false"></textarea>
-      <div class="idlist-actions">
-        <button type="button" class="btn-ghost" id="idListClear">Xoá ô</button>
-        <button type="button" class="btn-primary" id="idListApply">➕ Thêm vào giỏ</button>
+      <textarea id="idListInput" rows="7" placeholder="Gõ hoặc dán ID…&#10;15009, 11106, 10620&#10;13009 52414&#10;11106" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" inputmode="text"></textarea>
+      <div class="idlist-live" id="idListLive">Đã nhận: <b>0</b> mã</div>
+      <div class="idlist-actions idlist-actions-3">
+        <button type="button" class="btn-ghost" id="idListPaste" title="Dán từ clipboard">Dán</button>
+        <button type="button" class="btn-ghost" id="idListClear">Xoá</button>
+        <button type="button" class="btn-primary" id="idListApply">Thêm vào giỏ</button>
       </div>
       <div class="idlist-preview" id="idListPreview" hidden></div>
-      <p class="tool-note">1 hero chỉ giữ 1 skin — ID sau ghi đè ID trước cùng tướng. ID không có trong catalog sẽ bị bỏ qua.</p>
+      <p class="tool-note">Gõ tay hoặc dán list đều được (phẩy / xuống dòng / khoảng trắng). 1 hero = 1 skin. ID lạ sẽ bỏ qua.</p>
     </div>
   </div>
 
@@ -269,7 +271,9 @@
   <div class="cart-list" id="cartList"></div>
 
   <div class="empty" id="cartEmpty">
-    <div class="empty-icon">📭</div>
+    <div class="empty-icon ei-svg">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h2l1.2 9.2a2 2 0 0 0 2 1.8h7.6a2 2 0 0 0 2-1.7L20 8H7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="19.5" r="1.3" fill="currentColor"/><circle cx="17" cy="19.5" r="1.3" fill="currentColor"/><path d="M12 11v4M10 13h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
     <p>Giỏ đang trống. Mở tab <b>Tướng</b> hoặc <b>Bổ trợ</b> để bắt đầu chọn nhé!</p>
   </div>
 
@@ -284,8 +288,8 @@
     </div>
 
     <div class="cart-actions">
-      <button class="btn-ghost" id="clearBtn">🧹 Xoá hết</button>
-      <button class="btn-primary" id="runBtn">🚀 Chạy Mod</button>
+      <button class="btn-ghost" id="clearBtn">Xoá hết</button>
+      <button class="btn-primary" id="runBtn">Chạy Mod</button>
     </div>
   </div>
 </section>
@@ -302,7 +306,7 @@
   <div class="settings-list">
 
     <div class="set-card" data-action="checkvip">
-      <div class="set-icon" style="background:linear-gradient(135deg,#ffd25f,#ff6b9a)">💎</div>
+      <div class="set-icon si-vip"><svg viewBox="0 0 24 24" fill="none"><path d="M6 16.5 8.2 7l3.8 3.2L15.8 7 18 16.5H6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 18.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
       <div>
         <h5>Kiểm tra VIP</h5>
         <p>Xem thời hạn VIP còn lại</p>
@@ -311,16 +315,16 @@
     </div>
 
     <div class="set-card" data-action="myid">
-      <div class="set-icon" style="background:linear-gradient(135deg,#6c8cff,#5ed5ff)">🆔</div>
+      <div class="set-icon si-id"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 10h3.5M8 14h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="15.5" cy="10" r="1.2" fill="currentColor"/></svg></div>
       <div>
         <h5>Mã ID Telegram</h5>
         <p id="myidVal">—</p>
       </div>
-      <span class="set-val">📋</span>
+      <span class="set-val">copy</span>
     </div>
 
     <div class="set-card" data-action="haptic">
-      <div class="set-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">📳</div>
+      <div class="set-icon si-haptic"><svg viewBox="0 0 24 24" fill="none"><rect x="8" y="3.5" width="8" height="17" rx="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 9v6M19.5 9v6M2.5 10.5v3M21.5 10.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
       <div>
         <h5>Rung phản hồi</h5>
         <p>Haptic mỗi lần thao tác</p>
@@ -329,7 +333,7 @@
     </div>
 
     <div class="set-card" data-action="confetti">
-      <div class="set-icon" style="background:linear-gradient(135deg,#b16cff,#ff6b9a)">🎉</div>
+      <div class="set-icon si-confetti"><svg viewBox="0 0 24 24" fill="none"><path d="M8 14c0-4 2.5-7 6.5-8.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 19c3-1 5-3.2 6-6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="16.5" cy="6.5" r="1.2" fill="currentColor"/><circle cx="18.5" cy="10" r="1" fill="currentColor"/><circle cx="14" cy="9.5" r=".9" fill="currentColor"/><circle cx="9" cy="11" r=".8" fill="currentColor"/></svg></div>
       <div>
         <h5>Pháo bông</h5>
         <p>Hiệu ứng khi chạy Mod</p>
@@ -338,7 +342,7 @@
     </div>
 
     <div class="set-card" data-action="contact">
-      <div class="set-icon" style="background:linear-gradient(135deg,#ff5577,#b16cff)">💬</div>
+      <div class="set-icon si-chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3v-3H7.5A2.5 2.5 0 0 1 5 13.5v-7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
       <div>
         <h5>Liên hệ Admin</h5>
         <p>Báo lỗi · Mua VIP · Hỗ trợ</p>
@@ -347,16 +351,16 @@
     </div>
 
     <div class="set-card" data-action="donate">
-      <div class="set-icon" style="background:linear-gradient(135deg,#ffd25f,#34d399)">☕</div>
+      <div class="set-icon si-donate"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.4-7-9.2A3.8 3.8 0 0 1 12 8a3.8 3.8 0 0 1 7 2.8C19 15.6 12 20 12 20z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
       <div>
         <h5>Ủng hộ Developer</h5>
         <p>VIETINBANK: 109874557013</p>
       </div>
-      <span class="set-val">📋</span>
+      <span class="set-val">copy</span>
     </div>
 
     <div class="set-card" data-action="reset">
-      <div class="set-icon" style="background:linear-gradient(135deg,#ff5577,#ffd25f)">♻️</div>
+      <div class="set-icon si-reset"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12a7 7 0 1 0 2-4.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 5v5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div>
         <h5>Đặt lại ứng dụng</h5>
         <p>Xoá cache + giỏ hàng</p>
@@ -365,12 +369,12 @@
     </div>
 
     <div class="set-card" data-action="about">
-      <div class="set-icon" style="background:linear-gradient(135deg,#5ed5ff,#6c8cff)">ℹ️</div>
+      <div class="set-icon si-about"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.5V17M12 7.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
       <div>
         <h5>BANNEI MOD LQ</h5>
-        <p>Liquid Glass 6.2 · random + ID list</p>
+        <p>Liquid Glass 6.3 · icon + ID list</p>
       </div>
-      <span class="set-val" id="versionVal">v6.2</span>
+      <span class="set-val" id="versionVal">v6.3</span>
     </div>
 
   </div>
@@ -380,84 +384,84 @@
 <section class="page admin-page" id="page-admin">
   <div class="page-head">
     <div>
-      <h2>👑 Admin Panel</h2>
+      <h2>Admin Panel</h2>
       <p>Toàn quyền điều hành hệ thống</p>
     </div>
   </div>
 
   <div class="admin-grid">
 
-    <div class="adm-section-title">💎 Quản lý VIP</div>
+    <div class="adm-section-title">Quản lý VIP</div>
 
     <div class="admin-card">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ffd25f,#ff6b9a)">💎</span><h4>Cấp VIP</h4></div>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#c9a14a,#c45f84)"><svg viewBox="0 0 24 24" fill="none"><path d="M6 16.5 8.2 7l3.8 3.2L15.8 7 18 16.5H6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><h4>Cấp VIP</h4></div>
       <input type="number" placeholder="User ID" id="adm_vip_uid"/>
       <input type="number" placeholder="Số ngày" id="adm_vip_days"/>
       <button class="btn-primary" data-act="vipmember">Cấp VIP</button>
     </div>
 
     <div class="admin-card">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">📢</span><h4>Cộng VIP toàn server</h4></div>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#3fbf96,#5b93d4)"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v10M8 9l4-4 4 4M6 18h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h4>Cộng VIP toàn server</h4></div>
       <input type="number" placeholder="Số ngày" id="adm_all_days"/>
       <button class="btn-primary" data-act="congvipall">Cộng tất cả</button>
     </div>
 
     <div class="admin-card">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#8a93a4,#5eb1ff)">📋</span><h4>Danh sách VIP</h4></div>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#6b7488,#5b93d4)"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><h4>Danh sách VIP</h4></div>
       <p class="ac-desc">Bot sẽ gửi list vào chat</p>
       <button class="btn-ghost" data-act="listvip">Hiện list VIP</button>
     </div>
 
     <div class="admin-card">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff6b9a,#ff5577)">♻️</span><h4>Tước VIP 1 user</h4></div>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#e87a9c,#e85a78)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12a7 7 0 1 0 2-4.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 5v5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h4>Tước VIP 1 user</h4></div>
       <input type="number" placeholder="User ID" id="adm_reset_uid"/>
       <button class="btn-ghost" data-act="resetvip">Tước VIP</button>
     </div>
 
     <div class="admin-card danger wide">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff5577,#b16cff)">💥</span><h4>Reset ALL VIP</h4></div>
-      <p class="ac-desc">⚠️ Xoá sạch toàn bộ VIP — hành động không thể undo</p>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#e85a78,#a67ae0)"><svg viewBox="0 0 24 24" fill="none"><path d="M12 8v5M12 16.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10.2 4.8 2.9 17.2A2 2 0 0 0 4.6 20h14.8a2 2 0 0 0 1.7-2.8L13.8 4.8a2 2 0 0 0-3.6 0z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span><h4>Reset ALL VIP</h4></div>
+      <p class="ac-desc">Xoá sạch toàn bộ VIP — hành động không thể undo</p>
       <button class="btn-danger" data-act="resetvipall" data-confirm="Reset SẠCH toàn bộ VIP? Không thể hoàn tác!">Reset Tất Cả</button>
     </div>
 
-    <div class="adm-section-title">🛡️ Quản lý User</div>
+    <div class="adm-section-title">Quản lý User</div>
 
     <div class="admin-card">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#ff5577,#ffd25f)">🚫</span><h4>Ban user</h4></div>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#e85a78,#e6c15a)"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.6"/><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><h4>Ban user</h4></div>
       <input type="number" placeholder="User ID" id="adm_ban_uid"/>
       <button class="btn-danger" data-act="ban">Ban</button>
     </div>
 
     <div class="admin-card">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#34d399,#5eb1ff)">🔓</span><h4>Unban user</h4></div>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#3fbf96,#5b93d4)"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V8a4 4 0 0 1 8 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><h4>Unban user</h4></div>
       <input type="number" placeholder="User ID" id="adm_unban_uid"/>
       <button class="btn-primary" data-act="unban">Unban</button>
     </div>
 
-    <div class="adm-section-title">🔑 Hệ thống Key</div>
+    <div class="adm-section-title">Hệ thống Key</div>
 
     <div class="admin-card wide">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#6c8cff,#b16cff)">🔑</span><h4>Chế độ Key</h4></div>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#7b93e8,#a67ae0)"><svg viewBox="0 0 24 24" fill="none"><circle cx="8.5" cy="14" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M11 12.5 18 5.5M15.5 5.5H18v2.5M14.5 8.5l2-2" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h4>Chế độ Key</h4></div>
       <p class="ac-desc">Tắt = gửi file thẳng tay user. Bật = bắt vượt link lấy key.</p>
       <div class="btn-row">
-        <button class="btn-primary" data-act="batkey">🔔 Bật Key</button>
-        <button class="btn-ghost" data-act="tatkey">🔕 Tắt Key</button>
+        <button class="btn-primary" data-act="batkey">Bật Key</button>
+        <button class="btn-ghost" data-act="tatkey">Tắt Key</button>
       </div>
-      <button class="btn-ghost" data-act="statuskey">📊 Xem trạng thái</button>
+      <button class="btn-ghost" data-act="statuskey">Xem trạng thái</button>
     </div>
 
-    <div class="adm-section-title">🔄 Cập nhật Source</div>
+    <div class="adm-section-title">Cập nhật Source</div>
 
     <div class="admin-card wide">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#34d399,#6c8cff)">🔄</span><h4>Cập nhật Source (capnhat)</h4></div>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#3fbf96,#7b93e8)"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12a7 7 0 1 0 2-4.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 5v5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h4>Cập nhật Source (capnhat)</h4></div>
       <p class="ac-desc">Xếp lệnh cập nhật source. Hệ thống chờ job đang chạy xong rồi tự tráo — an toàn, không cần restart.</p>
-      <button class="btn-primary" data-act="capnhat" data-confirm="Xếp lệnh cập nhật Source ngay?">🔄 Cập nhật ngay</button>
+      <button class="btn-primary" data-act="capnhat" data-confirm="Xếp lệnh cập nhật Source ngay?">Cập nhật ngay</button>
     </div>
 
-    <div class="adm-section-title">📣 Broadcast</div>
+    <div class="adm-section-title">Broadcast</div>
 
     <div class="admin-card wide">
-      <div class="ac-head"><span class="ac-icon" style="background:linear-gradient(135deg,#b16cff,#ff6b9a)">📣</span><h4>Gửi tin toàn server (guiall)</h4></div>
+      <div class="ac-head"><span class="ac-icon ac-ico-svg" style="background:linear-gradient(135deg,#a67ae0,#e87a9c)"><svg viewBox="0 0 24 24" fill="none"><path d="M4 10v4h3l5 4V6L7 10H4z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M16 9a4 4 0 0 1 0 6M18.5 7a7 7 0 0 1 0 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><h4>Gửi tin toàn server (guiall)</h4></div>
       <textarea placeholder="Nội dung gửi cho tất cả user…" id="adm_broadcast" rows="3"></textarea>
       <button class="btn-primary" data-act="guiall">Gửi broadcast</button>
     </div>
@@ -483,12 +487,12 @@
       <div class="ring r1"></div>
       <div class="ring r2"></div>
       <div class="ring r3"></div>
-      <div class="run-emoji">🚀</div>
+      <div class="run-emoji run-ico-svg"><svg viewBox="0 0 24 24" fill="none"><path d="M5 15c4-1 7-4 9-9 2 4 4 6 7 7-4 2-7 5-9 9-1-4-3-6-7-7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M4 20l3-1M6 17l1 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
     </div>
     <h3 id="runTitle">Đã gửi yêu cầu!</h3>
     <p id="runMsg">Bot đang tạo file Mod — quay lại chat nhận file ZIP.</p>
     <div class="run-progress"><div class="run-bar" id="runBar"></div></div>
-    <div class="run-status" id="runStatus">⏳ Đang xử lý trên server...</div>
+    <div class="run-status" id="runStatus">Đang xử lý trên server...</div>
     <div class="cart-actions" style="margin-top:0">
       <button class="btn-ghost" id="runStay">Ở lại tiếp tục Mod</button>
       <button class="btn-primary" id="runClose">Quay về Telegram lấy file</button>
@@ -511,6 +515,6 @@
 </div>
 <button class="chatw-fab" id="chatFab" type="button" hidden>🤖<span class="chatw-badge" id="chatFabBadge"></span></button>
 
-<script src="app.js?v=18"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>
