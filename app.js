@@ -495,6 +495,8 @@ async function loadSkinCodes() {
  *  - API file   : {cdn}{prefix}{variant}head.jpg
  *      default  → 301300head.jpg  (logic 30_1300)
  *      skin 09  → 301309head.jpg
+ *  - Một số hero không có ...0head.jpg trên CDN (Omega 1140, Nakroth 1500,
+ *    Natalya 1420, …) → dùng default_variant từ hero_icons.json (1142 / 1501 / 1421).
  */
 function getHeroIconUrl(heroName, skinName) {
   const info = state.heroIcons[heroName];
@@ -502,7 +504,8 @@ function getHeroIconUrl(heroName, skinName) {
   const prefix = (info && info.prefix) || HERO_PREFIX[heroName] || '';
   if (!prefix) return '';
   const CDN = (info && info.cdn_id) || state.heroIcons._cdn_id || '30';
-  let variant = 0; // default portrait = ...0head.jpg
+  // default portrait: ưu tiên default_variant (CDN probe), không hardcode 0
+  let variant = (info && Number.isFinite(+info.default_variant)) ? (+info.default_variant) : 0;
   if (skinName) {
     const skinCode = state.skinCodes[heroName + '|' + skinName];
     if (skinCode && String(skinCode).length >= 4) {
@@ -521,12 +524,16 @@ function heroDisplayId(heroName) {
   return (info && (info.display_id || info.prefix)) || HERO_PREFIX[heroName] || '';
 }
 
-// onerror an toàn (không nhét SVG vào attribute)
+// onerror an toàn: thử variant +1,+2,+3 rồi mới SVG (Omega cần 2)
 window.__hiFb = function (el) {
   if (!el) return;
-  if (!el.dataset.fb) {
-    el.dataset.fb = '1';
-    el.src = String(el.src || '').replace(/0head\.jpg$/i, '1head.jpg');
+  const step = parseInt(el.dataset.fb || '0', 10) || 0;
+  const src = String(el.src || '');
+  const m = src.match(/(\d+)head\.jpg$/i);
+  if (m && step < 3) {
+    el.dataset.fb = String(step + 1);
+    const next = parseInt(m[1], 10) + 1;
+    el.src = src.replace(/(\d+)head\.jpg$/i, `${next}head.jpg`);
     return;
   }
   el.style.display = 'none';
@@ -538,7 +545,7 @@ window.__hiFb = function (el) {
 function heroIconImg(heroName, skinName, cls) {
   const url = getHeroIconUrl(heroName, skinName);
   if (!url) return '';
-  // Fallback: ...0head.jpg 403 → ...1head.jpg → SVG
+  // Fallback: ...Nhead.jpg 403 → N+1 → N+2 → N+3 → SVG
   return `<img class="${cls || 'hi-avatar'}" src="${url}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="__hiFb(this)">`;
 }
 

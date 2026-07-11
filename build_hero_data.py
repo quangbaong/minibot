@@ -44,6 +44,20 @@ BAD_NAME_PREFIX = {
     "Tamyn": "582",    # đúng là Ciyuanfashi
 }
 
+# CDN default portrait variant — nhiều hero không có {prefix}0head.jpg (403).
+# Probe HEAD HeroHeadPath/30{prefix}{v}head.jpg; chỉ lưu prefix cần v != 0.
+# Ví dụ: Omega 1140✗ → 1142✓ · Nakroth 1500✗ → 1501✓ · Natalya 1420✗ → 1421✓
+DEFAULT_VARIANT: dict[str, int] = {
+    "106": 1, "108": 1, "110": 1, "113": 1, "114": 2, "116": 1, "117": 1,
+    "118": 1, "120": 1, "121": 1, "124": 1, "131": 1, "136": 1, "139": 1,
+    "140": 1, "141": 1, "142": 1, "144": 1, "146": 1, "148": 1, "149": 1,
+    "150": 1, "153": 1, "156": 1, "157": 2, "162": 1, "163": 1, "166": 1,
+    "168": 2, "169": 1, "170": 1, "173": 1, "174": 1, "175": 1, "177": 1,
+    "180": 1, "186": 1, "187": 1, "190": 1, "501": 1, "502": 1, "504": 1,
+    "505": 1, "506": 1, "507": 1, "508": 1, "510": 1, "512": 1, "513": 1,
+    "530": 1, "539": 1, "540": 1,
+}
+
 
 def known_folder_names() -> list[str]:
     """Tên folder Sources_Bot + catalog (để khớp 'Airi Thích khách' → Airi)."""
@@ -157,7 +171,7 @@ def build(id_file: Path, write_sources: bool = True) -> dict:
     parsed = parse_id_skinnn(id_file)
     hero_data: dict = {}
     hero_icons: dict = {
-        "_note": "cdn_id + prefix + variant + head.jpg. Default variant=0 → 30_1300 ⇔ 301300head.jpg",
+        "_note": "cdn_id + prefix + variant + head.jpg. default_variant từ DEFAULT_VARIANT map (CDN probe). Airi 30_1300; Omega 30_1142; Nakroth 30_1501; Natalya 30_1421.",
         "_cdn_id": CDN_ID,
         "_url_tpl": "https://dl.ops.kgvn.garenanow.com/hok/VN/HeroHeadPath/{cdn}{prefix}{variant}head.jpg",
     }
@@ -197,10 +211,12 @@ def build(id_file: Path, write_sources: bool = True) -> dict:
             "internal": internal,
             "skins": [code for code, _ in skins],
         }
+        dvar = int(DEFAULT_VARIANT.get(prefix, 0))
         hero_icons[name] = {
             "cdn_id": CDN_ID,
             "prefix": prefix,
-            "api_key": f"{CDN_ID}_{prefix}0",
+            "default_variant": dvar,
+            "api_key": f"{CDN_ID}_{prefix}{dvar}",
             "display_id": prefix,
         }
 
