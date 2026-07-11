@@ -36,58 +36,31 @@ CDN_ID = "30"
 # 3 id đặc biệt — bỏ qua (không vào catalog / Sources_Bot)
 SKIP_PREFIXES = frozenset({"797", "798", "799"})
 
-# Fallback map name → prefix (đồng bộ app.js HERO_PREFIX)
-HERO_PREFIX_FALLBACK = {
-    "Airi": "130", "Aleister": "156", "Alice": "118", "Allain": "537", "Amily": "193",
-    "Annette": "519", "Aoi": "536", "Arduin": "126", "Arthur": "166", "Arum": "187",
-    "Astrid": "502", "Ata": "511", "Aya": "543", "Azzen'Ka": "127", "Baldum": "505",
-    "Bijan": "548", "Billow": "599", "Biron": "597", "Bolt Baron": "598", "Bonnie": "541",
-    "Bright": "540", "Butterfly": "116", "Capheny": "524", "Celica": "192",
-    "Charlotte": "206", "Chaugnar": "113", "Cresht": "171", "D'Arcy": "523",
-    "Dextra": "534", "Dirak": "530", "EX": "159", "Eland'orr": "199", "Elsu": "196",
-    "Enzo": "195", "Erin": "567", "Errol": "522", "Fennik": "173", "Florentino": "521",
-    "Gildur": "108", "Goverra": "596", "Grakk": "175", "Hayate": "132", "Heino": "563",
-    "Helen": "184", "Iggy": "538", "Ignis": "124", "Ilumia": "136", "Ishar": "526",
-    "Jinna": "115", "Kahlii": "110", "Kaine": "153", "Keera": "531", "Kil'Groth": "139",
-    "Kriknak": "162", "Krixi": "106", "Krizzix": "189", "Lauriel": "141", "Laville": "533",
-    "Liliana": "510", "Lindis": "177", "Lorion": "539", "Lumburr": "168", "Lữ Bố": "128",
-    "Maloch": "123", "Marja": "121", "Max": "180", "Mganga": "119", "Mina": "120",
-    "Ming": "568", "Moren": "170", "Murad": "131", "Nakroth": "150", "Natalya": "142",
-    "Ngộ Không": "167", "Omega": "114", "Omen": "506", "Ormarr": "117", "Paine": "137",
-    "Preyta": "148", "Qi": "528", "Quillen": "518", "Raz": "157", "Richter": "515",
-    "Rouie": "191", "Rourke": "512", "Roxie": "514", "Ryoma": "163", "Sephera": "527",
-    "Sinestrea": "535", "Skud": "134", "Slimz": "169", "Stuart": "174", "Superman": "140",
-    "Taara": "144", "Tachi": "542", "TeeMee": "186", "Teeri": "546", "Tel'Annas": "501",
-    "Thane": "135", "The Flash": "507", "Thorne": "532", "Toro": "105", "Triệu Vân": "129",
-    "Tulen": "190", "Valhein": "133", "Veera": "109", "Veres": "520", "Violet": "111",
-    "Volkath": "529", "Wisp": "508", "Wonder Woman": "504", "Xeniel": "149",
-    "Y'bneth": "509", "Yan": "544", "Yena": "154", "Yorn": "112", "Yue": "545",
-    "Zata": "513", "Zephys": "107", "Zill": "146", "Zip": "525", "Zuka": "503",
-    "Điêu Thuyền": "152", "Edras": "194", "Flowborn": "577", "Tamyn": "582",
-    "Dextra": "534",
+# Tên sai từng map nhầm prefix — không dùng lại khi resolve
+BAD_NAME_PREFIX = {
+    "EX": "159",       # đúng là Dolia
+    "Edras": "194",    # đúng là SuLie
+    "Flowborn": "577", # đúng là ShaoSiYuan
+    "Tamyn": "582",    # đúng là Ciyuanfashi
 }
 
 
-def load_existing_prefix_map() -> dict[str, str]:
-    """name → prefix từ hero_data_full + catalog + fallback."""
-    name_to_prefix: dict[str, str] = dict(HERO_PREFIX_FALLBACK)
-    hdf = MINIBOT / "hero_data_full.json"
-    if hdf.is_file():
+def known_folder_names() -> list[str]:
+    """Tên folder Sources_Bot + catalog (để khớp 'Airi Thích khách' → Airi)."""
+    names: set[str] = set()
+    if SOURCES_BOT.is_dir():
+        for d in os.listdir(SOURCES_BOT):
+            if (SOURCES_BOT / d).is_dir() and d not in BAD_NAME_PREFIX:
+                names.add(d)
+    cat_path = MINIBOT / "catalog.json"
+    if cat_path.is_file():
         try:
-            data = json.loads(hdf.read_text(encoding="utf-8"))
-            for name, info in data.items():
-                if isinstance(info, dict) and info.get("prefix"):
-                    name_to_prefix[name] = str(info["prefix"])
+            for k in json.loads(cat_path.read_text(encoding="utf-8")):
+                if k not in BAD_NAME_PREFIX and k not in ("Cam Xa", "HD Chiêu", "Server"):
+                    names.add(k)
         except Exception:
             pass
-    # Sources_Bot folder names (ưu tiên giữ tên folder VN)
-    sb = ROOT / "Sources_Bot"
-    if sb.is_dir():
-        for name in os.listdir(sb):
-            if name not in name_to_prefix and (sb / name).is_dir():
-                # giữ nếu đã có prefix từ file cũ
-                pass
-    return name_to_prefix
+    return sorted(names, key=len, reverse=True)
 
 
 def parse_id_skinnn(path: Path) -> list[dict]:
@@ -120,34 +93,40 @@ def parse_id_skinnn(path: Path) -> list[dict]:
     return heroes
 
 
-def resolve_vn_name(prefix: str, skins: list, name_to_prefix: dict[str, str], catalog_keys: list[str]) -> str | None:
-    """Map hero id (130) → tên folder VN (Airi)."""
-    prefix_to_names: dict[str, list[str]] = {}
-    for n, p in name_to_prefix.items():
-        prefix_to_names.setdefault(str(p), []).append(n)
+def name_from_skin_label(skin_name: str, folders: list[str]) -> str | None:
+    """'Airi Thích khách' / 'Dolia Hoa tiêu…' → Airi / Dolia."""
+    if not skin_name:
+        return None
+    # bỏ tag vip nếu có: [●]Dolia ...
+    s = re.sub(r"^\[[^\]]*\]\s*", "", skin_name).strip()
+    # khớp folder dài nhất trước (The Flash, Wonder Woman, …)
+    for key in folders:
+        if not key or key in BAD_NAME_PREFIX:
+            continue
+        if s == key or s.startswith(key + " "):
+            return key
+    for special in ("The Flash", "Bolt Baron", "Wonder Woman", "Azzen'Ka", "Eland'orr", "Kil'Groth", "Tel'Annas", "Y'bneth", "D'Arcy"):
+        if s == special or s.startswith(special + " "):
+            return special
+    parts = s.split()
+    return parts[0] if parts else None
 
-    if prefix in prefix_to_names:
-        # ưu tiên tên có trong catalog
-        for n in prefix_to_names[prefix]:
-            if n in catalog_keys:
-                return n
-        return sorted(prefix_to_names[prefix], key=len)[0]
 
-    # đoán từ tên skin: "Airi Thích khách" → match catalog key dài nhất
+def resolve_hero_name(prefix: str, internal: str, skins: list, folders: list[str]) -> str:
+    """
+    Đúng id + đúng tên:
+      1) Từ tên skin trong id_skinnn (ưu tiên tuyệt đối)
+      2) Internal code trong id_skinnn: 593_MaChao → MaChao
+    Không reverse map từ fallback sai (EX/Edras/…).
+    """
     if skins:
-        skin_name = skins[0][1]
-        best = None
-        for key in sorted(catalog_keys, key=len, reverse=True):
-            if skin_name == key or skin_name.startswith(key + " ") or skin_name.startswith(key):
-                best = key
-                break
-        if best:
-            return best
-        # lấy token đầu
-        first = skin_name.split()[0]
-        if first in catalog_keys:
-            return first
-    return None
+        n = name_from_skin_label(skins[0][1], folders)
+        if n and n not in BAD_NAME_PREFIX:
+            return n
+    # hero chưa skin: dùng đúng tên sau dấu _ trong id_skinnn
+    if internal and internal not in BAD_NAME_PREFIX:
+        return internal
+    return f"Hero{prefix}"
 
 
 def write_sources_bot(hero_name: str, skins: list[tuple[str, str]]) -> None:
@@ -171,18 +150,9 @@ def build(id_file: Path, write_sources: bool = True) -> dict:
     if not id_file.is_file():
         raise FileNotFoundError(f"Không thấy {id_file}")
 
-    name_to_prefix = load_existing_prefix_map()
-    catalog_keys: list[str] = []
+    folders = known_folder_names()
+    # thêm tên sẽ suy ra trong pass này (để hero sau khớp)
     cat_path = MINIBOT / "catalog.json"
-    if cat_path.is_file():
-        try:
-            catalog_keys = list(json.loads(cat_path.read_text(encoding="utf-8")).keys())
-        except Exception:
-            pass
-    if SOURCES_BOT.is_dir():
-        for d in os.listdir(SOURCES_BOT):
-            if (SOURCES_BOT / d).is_dir() and d not in catalog_keys:
-                catalog_keys.append(d)
 
     parsed = parse_id_skinnn(id_file)
     hero_data: dict = {}
@@ -193,46 +163,38 @@ def build(id_file: Path, write_sources: bool = True) -> dict:
     }
     skin_codes: dict = {}
     catalog: dict[str, list[str]] = {}
-    # giữ extras nếu catalog cũ có (không phải hero)
-    if cat_path.is_file():
-        try:
-            old_cat = json.loads(cat_path.read_text(encoding="utf-8"))
-            for k, v in old_cat.items():
-                if k in ("Cam Xa", "HD Chiêu", "Server") or not isinstance(v, list):
-                    catalog[k] = v
-        except Exception:
-            pass
 
-    skipped = []
     empty_skin_heroes = []
     forced_skip = []
+    name_notes = []
     sources_written = 0
+    used_names: dict[str, str] = {}  # name → prefix (chống trùng tên)
+
     for h in parsed:
         prefix = h["prefix"]
         skins = h["skins"]
+        internal = h.get("internal") or ""
         if prefix in SKIP_PREFIXES:
             forced_skip.append(h.get("code") or prefix)
             continue
-        # VẪN thêm hero dù chưa có skin (vd 593_MaChao)
-        name = resolve_vn_name(prefix, skins, name_to_prefix, catalog_keys)
-        if not name:
-            if skins and skins[0][1].split():
-                name = skins[0][1].split()[0]
-            else:
-                # internal từ id_skinnn: 593_MaChao → MaChao
-                name = h.get("internal") or f"Hero{prefix}"
-            skipped.append(f"{h['code']}→ name: {name}")
+
+        name = resolve_hero_name(prefix, internal, skins, folders)
+        # trùng tên khác prefix → gắn suffix id
+        if name in used_names and used_names[name] != prefix:
+            name = f"{name}_{prefix}"
+            name_notes.append(f"{h['code']} trùng tên → {name}")
+        used_names[name] = prefix
+        if name not in folders:
+            folders.append(name)
+            folders.sort(key=len, reverse=True)
 
         if not skins:
-            empty_skin_heroes.append(f"{prefix} ({name})")
-
-        # cập nhật map để resolve hero sau ổn định
-        name_to_prefix[name] = prefix
-        if name not in catalog_keys:
-            catalog_keys.append(name)
+            empty_skin_heroes.append(f"{prefix} = {name}")
+        name_notes.append(f"{prefix} → {name}" + (f" ({internal})" if internal and internal != name else ""))
 
         hero_data[name] = {
             "prefix": prefix,
+            "internal": internal,
             "skins": [code for code, _ in skins],
         }
         hero_icons[name] = {
@@ -242,23 +204,36 @@ def build(id_file: Path, write_sources: bool = True) -> dict:
             "display_id": prefix,
         }
 
-        # catalog = list tên skin (UI Mini App) — rỗng nếu chưa có skin
         skin_names: list[str] = []
         seen_names: set[str] = set()
         for code, sname in skins:
-            skin_codes[f"{name}|{sname}"] = code
-            if sname not in seen_names:
-                seen_names.add(sname)
-                skin_names.append(sname)
+            # bỏ tag [●] nếu lỡ có
+            clean = re.sub(r"^\[[^\]]*\]\s*", "", sname).strip()
+            skin_codes[f"{name}|{clean}"] = code
+            if clean not in seen_names:
+                seen_names.add(clean)
+                skin_names.append(clean)
         catalog[name] = skin_names
 
         if write_sources:
-            write_sources_bot(name, skins)
+            write_sources_bot(name, [(c, re.sub(r"^\[[^\]]*\]\s*", "", n).strip()) for c, n in skins])
             sources_written += 1
 
-    # sort catalog hero keys (extras giữ đầu nếu có)
-    extras = {k: catalog.pop(k) for k in list(catalog.keys()) if k in ("Cam Xa", "HD Chiêu", "Server")}
-    catalog_sorted = {**extras, **{k: catalog[k] for k in sorted(catalog.keys(), key=lambda x: x.lower())}}
+    # dọn folder Sources_Bot tên sai (EX/Edras/…) nếu đã tạo bản đúng
+    if write_sources:
+        for bad, pfx in BAD_NAME_PREFIX.items():
+            # nếu prefix này đã có tên đúng khác
+            good = next((n for n, info in hero_data.items() if info.get("prefix") == pfx), None)
+            bad_dir = SOURCES_BOT / bad
+            if good and good != bad and bad_dir.is_dir():
+                try:
+                    import shutil
+                    shutil.rmtree(bad_dir)
+                    name_notes.append(f"removed wrong Sources_Bot/{bad} (→ {good})")
+                except Exception:
+                    pass
+
+    catalog_sorted = {k: catalog[k] for k in sorted(catalog.keys(), key=lambda x: x.lower())}
 
     return {
         "hero_data": hero_data,
@@ -273,7 +248,7 @@ def build(id_file: Path, write_sources: bool = True) -> dict:
             "sources_written": sources_written,
             "empty_skin_heroes": empty_skin_heroes,
             "forced_skip": forced_skip,
-            "name_notes": skipped,
+            "name_notes": name_notes,
         },
     }
 
@@ -303,9 +278,17 @@ def main() -> int:
         print(f"📭 Hero chưa có skin (vẫn thêm): {len(st['empty_skin_heroes'])}")
         for s in st["empty_skin_heroes"]:
             print(f"   - {s}")
-    if st.get("name_notes"):
-        print(f"📝 Name resolve notes ({len(st['name_notes'])}):")
-        for s in st["name_notes"][:25]:
+    # chỉ in note quan trọng (trùng tên / dọn folder sai)
+    notes = [s for s in st.get("name_notes") or [] if "trùng" in s or "removed" in s or "→" not in s or s.count("→") > 1]
+    # luôn in vài id đặc biệt để kiểm tra
+    check = [s for s in st.get("name_notes") or [] if any(x in s for x in ("159 ", "194 ", "577 ", "593 ", "595 ", "582 ", "584 "))]
+    if check:
+        print("🔎 Check id→tên:")
+        for s in check:
+            print(f"   - {s}")
+    if notes:
+        print(f"📝 Notes ({len(notes)}):")
+        for s in notes[:20]:
             print(f"   - {s}")
 
     if args.dry_run:

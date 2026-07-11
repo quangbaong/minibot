@@ -275,6 +275,7 @@
     "Chaugnar Quân cảnh",
     "Chaugnar Ác mộng Arcade"
   ],
+  "Ciyuanfashi": [],
   "CiYuansheshou": [],
   "Cresht": [
     "Cresht Thợ sửa cáp",
@@ -312,7 +313,13 @@
     "Dirak Snack giòn tan",
     "Dirak Lốp trưởng"
   ],
-  "Edras": [],
+  "Dolia": [
+    "Dolia Hoa tiêu đại dương",
+    "Dolia Môn đồ tập sự",
+    "Dolia Nhật Ký Tình Yêu",
+    "Dolia Huyễn Ngọc Nhân Ngư",
+    "Dolia Mã Khởi Thiên Ca"
+  ],
   "Eland'orr": [
     "Eland'orr Soái tặc",
     "Eland'orr Phi vụ thế kỷ",
@@ -368,13 +375,6 @@
     "Errol Dị nhân tinh hệ",
     "Errol Dũng Sĩ Pixel"
   ],
-  "EX": [
-    "Dolia Hoa tiêu đại dương",
-    "Dolia Môn đồ tập sự",
-    "Dolia Nhật Ký Tình Yêu",
-    "Dolia Huyễn Ngọc Nhân Ngư",
-    "Dolia Mã Khởi Thiên Ca"
-  ],
   "Fennik": [
     "Fennik Nhà thám hiểm",
     "Fennik Đội đặc nhiệm",
@@ -402,7 +402,6 @@
     "Florentino S - Quang vinh",
     "Florentino Kỷ Nguyên Hổ Phách"
   ],
-  "Flowborn": [],
   "Gildur": [
     "Gildur Tiệc bãi biển",
     "Gildur Phượt thủ",
@@ -969,6 +968,7 @@
     "Sephera Tây Vực phong tình",
     "Sephera Hiệu phó Carano"
   ],
+  "ShaoSiYuan": [],
   "Sinestrea": [
     "Sinestrea Giấc mơ trưa",
     "Sinestrea Tiểu thư Băng giá",
@@ -1020,6 +1020,7 @@
     "Stuart 17411",
     "Stuart 17412"
   ],
+  "SuLie": [],
   "Superman": [
     "Superman Chúa tể công lý",
     "Superman Bất công lý"
@@ -1046,7 +1047,6 @@
     "Tachi Thần thoại Hy Lạp",
     "Tachi Cần Thủ Cyborg"
   ],
-  "Tamyn": [],
   "TeeMee": [
     "TeeMee Xiếc cung đình",
     "TeeMee Mặc định",

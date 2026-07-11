@@ -1,6 +1,7 @@
 {
   "Toro": {
     "prefix": "105",
+    "internal": "LianPo",
     "skins": [
       "10501",
       "10502",
@@ -14,6 +15,7 @@
   },
   "Krixi": {
     "prefix": "106",
+    "internal": "XiaoQiao",
     "skins": [
       "10601",
       "10602",
@@ -35,6 +37,7 @@
   },
   "Zephys": {
     "prefix": "107",
+    "internal": "Zhaoyun",
     "skins": [
       "10701",
       "10703",
@@ -53,6 +56,7 @@
   },
   "Gildur": {
     "prefix": "108",
+    "internal": "MoDi",
     "skins": [
       "10801",
       "10802",
@@ -67,6 +71,7 @@
   },
   "Veera": {
     "prefix": "109",
+    "internal": "DaJi",
     "skins": [
       "10901",
       "10902",
@@ -87,6 +92,7 @@
   },
   "Kahlii": {
     "prefix": "110",
+    "internal": "YingZheng",
     "skins": [
       "11001",
       "11003",
@@ -101,6 +107,7 @@
   },
   "Violet": {
     "prefix": "111",
+    "internal": "SunShangXiang",
     "skins": [
       "11101",
       "11102",
@@ -126,6 +133,7 @@
   },
   "Yorn": {
     "prefix": "112",
+    "internal": "GongShuBan",
     "skins": [
       "11201",
       "11202",
@@ -146,6 +154,7 @@
   },
   "Chaugnar": {
     "prefix": "113",
+    "internal": "ZhuangZhou",
     "skins": [
       "11301",
       "11304",
@@ -154,6 +163,7 @@
   },
   "Omega": {
     "prefix": "114",
+    "internal": "Omega",
     "skins": [
       "11402",
       "11403",
@@ -164,6 +174,7 @@
   },
   "Jinna": {
     "prefix": "115",
+    "internal": "GaoJianLi",
     "skins": [
       "11501",
       "11502",
@@ -176,6 +187,7 @@
   },
   "Butterfly": {
     "prefix": "116",
+    "internal": "JingKe",
     "skins": [
       "11601",
       "11602",
@@ -199,6 +211,7 @@
   },
   "Ormarr": {
     "prefix": "117",
+    "internal": "ZhongWuYan",
     "skins": [
       "11701",
       "11703",
@@ -211,6 +224,7 @@
   },
   "Alice": {
     "prefix": "118",
+    "internal": "SunBin",
     "skins": [
       "11801",
       "11803",
@@ -229,6 +243,7 @@
   },
   "Mganga": {
     "prefix": "119",
+    "internal": "BianQue",
     "skins": [
       "11901",
       "11902",
@@ -242,6 +257,7 @@
   },
   "Mina": {
     "prefix": "120",
+    "internal": "BaiQi",
     "skins": [
       "12001",
       "12002",
@@ -258,6 +274,7 @@
   },
   "Marja": {
     "prefix": "121",
+    "internal": "MiYue",
     "skins": [
       "12101",
       "12102",
@@ -270,6 +287,7 @@
   },
   "Maloch": {
     "prefix": "123",
+    "internal": "LvBu",
     "skins": [
       "12301",
       "12302",
@@ -287,6 +305,7 @@
   },
   "Ignis": {
     "prefix": "124",
+    "internal": "ZhouYu",
     "skins": [
       "12401",
       "12402",
@@ -299,6 +318,7 @@
   },
   "Arduin": {
     "prefix": "126",
+    "internal": "XiaHouDun",
     "skins": [
       "12601",
       "12602",
@@ -314,6 +334,7 @@
   },
   "Azzen'Ka": {
     "prefix": "127",
+    "internal": "ZhenJi",
     "skins": [
       "12701",
       "12702",
@@ -327,6 +348,7 @@
   },
   "Lữ Bố": {
     "prefix": "128",
+    "internal": "CaoCao",
     "skins": [
       "12801",
       "12802",
@@ -343,6 +365,7 @@
   },
   "Triệu Vân": {
     "prefix": "129",
+    "internal": "DianWei",
     "skins": [
       "12901",
       "12902",
@@ -360,6 +383,7 @@
   },
   "Airi": {
     "prefix": "130",
+    "internal": "GongBenWuZang",
     "skins": [
       "13001",
       "13002",
@@ -382,6 +406,7 @@
   },
   "Murad": {
     "prefix": "131",
+    "internal": "LiBai",
     "skins": [
       "13101",
       "13102",
@@ -406,6 +431,7 @@
   },
   "Hayate": {
     "prefix": "132",
+    "internal": "MaKeBoLuo",
     "skins": [
       "13201",
       "13202",
@@ -426,6 +452,7 @@
   },
   "Valhein": {
     "prefix": "133",
+    "internal": "DiRenJie",
     "skins": [
       "13301",
       "13302",
@@ -446,6 +473,7 @@
   },
   "Skud": {
     "prefix": "134",
+    "internal": "TangSanZang",
     "skins": [
       "13402",
       "13403",
@@ -458,6 +486,7 @@
   },
   "Thane": {
     "prefix": "135",
+    "internal": "XiangYu",
     "skins": [
       "13501",
       "13502",
@@ -469,6 +498,7 @@
   },
   "Ilumia": {
     "prefix": "136",
+    "internal": "WuZeTian",
     "skins": [
       "13601",
       "13602",
@@ -488,6 +518,7 @@
   },
   "Paine": {
     "prefix": "137",
+    "internal": "SiMaYi",
     "skins": [
       "13701",
       "13702",
@@ -500,6 +531,7 @@
   },
   "Kil'Groth": {
     "prefix": "139",
+    "internal": "KongFuZi",
     "skins": [
       "13901",
       "13902",
@@ -510,6 +542,7 @@
   },
   "Superman": {
     "prefix": "140",
+    "internal": "GuanYu",
     "skins": [
       "14001",
       "14002"
@@ -517,6 +550,7 @@
   },
   "Lauriel": {
     "prefix": "141",
+    "internal": "Diaochan",
     "skins": [
       "14101",
       "14102",
@@ -538,6 +572,7 @@
   },
   "Natalya": {
     "prefix": "142",
+    "internal": "CaiWenJi",
     "skins": [
       "14201",
       "14202",
@@ -558,6 +593,7 @@
   },
   "Taara": {
     "prefix": "144",
+    "internal": "ChengYaoJin",
     "skins": [
       "14401",
       "14402",
@@ -573,6 +609,7 @@
   },
   "Zill": {
     "prefix": "146",
+    "internal": "HongFu",
     "skins": [
       "14601",
       "14602",
@@ -588,6 +625,7 @@
   },
   "Preyta": {
     "prefix": "148",
+    "internal": "JiangZiYa",
     "skins": [
       "14801",
       "14802",
@@ -598,6 +636,7 @@
   },
   "Xeniel": {
     "prefix": "149",
+    "internal": "LiuBang",
     "skins": [
       "14901",
       "14902",
@@ -613,6 +652,7 @@
   },
   "Nakroth": {
     "prefix": "150",
+    "internal": "HanXin",
     "skins": [
       "15001",
       "15002",
@@ -632,6 +672,7 @@
   },
   "Điêu Thuyền": {
     "prefix": "152",
+    "internal": "WangZhaoJun",
     "skins": [
       "15201",
       "15202",
@@ -652,6 +693,7 @@
   },
   "Kaine": {
     "prefix": "153",
+    "internal": "LanLingWang",
     "skins": [
       "15301",
       "15302",
@@ -663,6 +705,7 @@
   },
   "Yena": {
     "prefix": "154",
+    "internal": "HuaMuLan",
     "skins": [
       "15401",
       "15402",
@@ -682,6 +725,7 @@
   },
   "Aleister": {
     "prefix": "156",
+    "internal": "ZhangLiang",
     "skins": [
       "15601",
       "15602",
@@ -700,6 +744,7 @@
   },
   "Raz": {
     "prefix": "157",
+    "internal": "BuZhiHuoWu",
     "skins": [
       "15702",
       "15703",
@@ -715,8 +760,9 @@
       "15714"
     ]
   },
-  "EX": {
+  "Dolia": {
     "prefix": "159",
+    "internal": "Dolia",
     "skins": [
       "15901",
       "15902",
@@ -727,6 +773,7 @@
   },
   "Kriknak": {
     "prefix": "162",
+    "internal": "Nakoruru",
     "skins": [
       "16201",
       "16202",
@@ -738,6 +785,7 @@
   },
   "Ryoma": {
     "prefix": "163",
+    "internal": "JuYouJing",
     "skins": [
       "16301",
       "16302",
@@ -755,6 +803,7 @@
   },
   "Arthur": {
     "prefix": "166",
+    "internal": "YaSeWang",
     "skins": [
       "16601",
       "16602",
@@ -773,6 +822,7 @@
   },
   "Ngộ Không": {
     "prefix": "167",
+    "internal": "WuKong",
     "skins": [
       "16701",
       "16702",
@@ -791,6 +841,7 @@
   },
   "Lumburr": {
     "prefix": "168",
+    "internal": "Niu",
     "skins": [
       "16803",
       "16804",
@@ -801,6 +852,7 @@
   },
   "Slimz": {
     "prefix": "169",
+    "internal": "HouYi",
     "skins": [
       "16901",
       "16902",
@@ -819,6 +871,7 @@
   },
   "Moren": {
     "prefix": "170",
+    "internal": "LiuBei",
     "skins": [
       "17001",
       "17002",
@@ -828,6 +881,7 @@
   },
   "Cresht": {
     "prefix": "171",
+    "internal": "ZhangFei",
     "skins": [
       "17101",
       "17102",
@@ -840,6 +894,7 @@
   },
   "Fennik": {
     "prefix": "173",
+    "internal": "LiYuanFang",
     "skins": [
       "17301",
       "17302",
@@ -856,6 +911,7 @@
   },
   "Stuart": {
     "prefix": "174",
+    "internal": "YuJi",
     "skins": [
       "17401",
       "17402",
@@ -873,6 +929,7 @@
   },
   "Grakk": {
     "prefix": "175",
+    "internal": "ZhongKui",
     "skins": [
       "17501",
       "17502",
@@ -892,6 +949,7 @@
   },
   "Lindis": {
     "prefix": "177",
+    "internal": "ChengJiSiHan",
     "skins": [
       "17701",
       "17702",
@@ -905,6 +963,7 @@
   },
   "Max": {
     "prefix": "180",
+    "internal": "NeZha",
     "skins": [
       "18001",
       "18002",
@@ -919,6 +978,7 @@
   },
   "Helen": {
     "prefix": "184",
+    "internal": "CaiWenJi",
     "skins": [
       "18401",
       "18402",
@@ -933,6 +993,7 @@
   },
   "TeeMee": {
     "prefix": "186",
+    "internal": "TaiYiZhenRen",
     "skins": [
       "18601",
       "18602",
@@ -947,6 +1008,7 @@
   },
   "Arum": {
     "prefix": "187",
+    "internal": "DongHuangTaiYi",
     "skins": [
       "18701",
       "18702",
@@ -964,6 +1026,7 @@
   },
   "Krizzix": {
     "prefix": "189",
+    "internal": "GuiGuZi",
     "skins": [
       "18901",
       "18902",
@@ -975,6 +1038,7 @@
   },
   "Tulen": {
     "prefix": "190",
+    "internal": "ZhuGeLiang",
     "skins": [
       "19001",
       "19002",
@@ -996,6 +1060,7 @@
   },
   "Rouie": {
     "prefix": "191",
+    "internal": "DaQiao",
     "skins": [
       "19101",
       "19102",
@@ -1010,6 +1075,7 @@
   },
   "Celica": {
     "prefix": "192",
+    "internal": "HuangZhong",
     "skins": [
       "19201",
       "19202",
@@ -1022,6 +1088,7 @@
   },
   "Amily": {
     "prefix": "193",
+    "internal": "LaFeiEr",
     "skins": [
       "19301",
       "19302",
@@ -1034,12 +1101,14 @@
       "19312"
     ]
   },
-  "Edras": {
+  "SuLie": {
     "prefix": "194",
+    "internal": "SuLie",
     "skins": []
   },
   "Enzo": {
     "prefix": "195",
+    "internal": "BaiLiXuanCe",
     "skins": [
       "19501",
       "19502",
@@ -1055,6 +1124,7 @@
   },
   "Elsu": {
     "prefix": "196",
+    "internal": "Elsu",
     "skins": [
       "19601",
       "19602",
@@ -1072,6 +1142,7 @@
   },
   "Eland'orr": {
     "prefix": "199",
+    "internal": "Li",
     "skins": [
       "19901",
       "19902",
@@ -1086,12 +1157,14 @@
   },
   "Charlotte": {
     "prefix": "206",
+    "internal": "XiaLuoTe",
     "skins": [
       "20601"
     ]
   },
   "Tel'Annas": {
     "prefix": "501",
+    "internal": "TelAnnas",
     "skins": [
       "50101",
       "50102",
@@ -1118,6 +1191,7 @@
   },
   "Astrid": {
     "prefix": "502",
+    "internal": "Astrid",
     "skins": [
       "50201",
       "50202",
@@ -1133,6 +1207,7 @@
   },
   "Zuka": {
     "prefix": "503",
+    "internal": "Zuka",
     "skins": [
       "50301",
       "50302",
@@ -1149,12 +1224,14 @@
   },
   "Wonder Woman": {
     "prefix": "504",
+    "internal": "WonderWoman",
     "skins": [
       "50401"
     ]
   },
   "Baldum": {
     "prefix": "505",
+    "internal": "Baldum",
     "skins": [
       "50501",
       "50502",
@@ -1167,6 +1244,7 @@
   },
   "Omen": {
     "prefix": "506",
+    "internal": "DarkKnight",
     "skins": [
       "50601",
       "50602",
@@ -1184,12 +1262,14 @@
   },
   "The Flash": {
     "prefix": "507",
+    "internal": "Flash",
     "skins": [
       "50701"
     ]
   },
   "Wisp": {
     "prefix": "508",
+    "internal": "Zhadanren",
     "skins": [
       "50801",
       "50802",
@@ -1204,6 +1284,7 @@
   },
   "Y'bneth": {
     "prefix": "509",
+    "internal": "Ybneth",
     "skins": [
       "50901",
       "50902",
@@ -1216,6 +1297,7 @@
   },
   "Liliana": {
     "prefix": "510",
+    "internal": "Liliana",
     "skins": [
       "51001",
       "51002",
@@ -1233,6 +1315,7 @@
   },
   "Ata": {
     "prefix": "511",
+    "internal": "ZhuBaJie",
     "skins": [
       "51101",
       "51102",
@@ -1246,6 +1329,7 @@
   },
   "Rourke": {
     "prefix": "512",
+    "internal": "Rourke",
     "skins": [
       "51201",
       "51202",
@@ -1258,6 +1342,7 @@
   },
   "Zata": {
     "prefix": "513",
+    "internal": "ShuSheng",
     "skins": [
       "51301",
       "51302",
@@ -1271,6 +1356,7 @@
   },
   "Roxie": {
     "prefix": "514",
+    "internal": "Roxi",
     "skins": [
       "51401",
       "51402",
@@ -1284,6 +1370,7 @@
   },
   "Richter": {
     "prefix": "515",
+    "internal": "Richter",
     "skins": [
       "51501",
       "51502",
@@ -1297,6 +1384,7 @@
   },
   "Quillen": {
     "prefix": "518",
+    "internal": "Quillen",
     "skins": [
       "51801",
       "51802",
@@ -1315,6 +1403,7 @@
   },
   "Annette": {
     "prefix": "519",
+    "internal": "Annette",
     "skins": [
       "51901",
       "51902",
@@ -1331,6 +1420,7 @@
   },
   "Veres": {
     "prefix": "520",
+    "internal": "Veres",
     "skins": [
       "52001",
       "52002",
@@ -1350,6 +1440,7 @@
   },
   "Florentino": {
     "prefix": "521",
+    "internal": "Florentino",
     "skins": [
       "52101",
       "52102",
@@ -1367,6 +1458,7 @@
   },
   "Errol": {
     "prefix": "522",
+    "internal": "Errol",
     "skins": [
       "52201",
       "52202",
@@ -1381,6 +1473,7 @@
   },
   "D'Arcy": {
     "prefix": "523",
+    "internal": "Darcy",
     "skins": [
       "52301",
       "52302",
@@ -1393,6 +1486,7 @@
   },
   "Capheny": {
     "prefix": "524",
+    "internal": "Capheny",
     "skins": [
       "52401",
       "52402",
@@ -1413,6 +1507,7 @@
   },
   "Zip": {
     "prefix": "525",
+    "internal": "Driver",
     "skins": [
       "52501",
       "52502",
@@ -1426,6 +1521,7 @@
   },
   "Ishar": {
     "prefix": "526",
+    "internal": "Summoner",
     "skins": [
       "52601",
       "52602",
@@ -1441,6 +1537,7 @@
   },
   "Sephera": {
     "prefix": "527",
+    "internal": "Sephera",
     "skins": [
       "52701",
       "52702",
@@ -1458,6 +1555,7 @@
   },
   "Qi": {
     "prefix": "528",
+    "internal": "DaMo",
     "skins": [
       "52801",
       "52802",
@@ -1472,6 +1570,7 @@
   },
   "Volkath": {
     "prefix": "529",
+    "internal": "Volkath",
     "skins": [
       "52901",
       "52902",
@@ -1485,6 +1584,7 @@
   },
   "Dirak": {
     "prefix": "530",
+    "internal": "Dirak",
     "skins": [
       "53001",
       "53002",
@@ -1497,6 +1597,7 @@
   },
   "Keera": {
     "prefix": "531",
+    "internal": "Keera",
     "skins": [
       "53101",
       "53102",
@@ -1513,6 +1614,7 @@
   },
   "Thorne": {
     "prefix": "532",
+    "internal": "Genius",
     "skins": [
       "53201",
       "53202",
@@ -1525,6 +1627,7 @@
   },
   "Laville": {
     "prefix": "533",
+    "internal": "HouYi",
     "skins": [
       "53301",
       "53302",
@@ -1543,6 +1646,7 @@
   },
   "Dextra": {
     "prefix": "534",
+    "internal": "Grantwish",
     "skins": [
       "53401",
       "53402",
@@ -1555,6 +1659,7 @@
   },
   "Sinestrea": {
     "prefix": "535",
+    "internal": "Wish",
     "skins": [
       "53501",
       "53502",
@@ -1571,6 +1676,7 @@
   },
   "Aoi": {
     "prefix": "536",
+    "internal": "Ninja",
     "skins": [
       "53601",
       "53602",
@@ -1585,6 +1691,7 @@
   },
   "Allain": {
     "prefix": "537",
+    "internal": "Trip",
     "skins": [
       "53701",
       "53702",
@@ -1599,6 +1706,7 @@
   },
   "Iggy": {
     "prefix": "538",
+    "internal": "Iggy",
     "skins": [
       "53801",
       "53802",
@@ -1611,6 +1719,7 @@
   },
   "Lorion": {
     "prefix": "539",
+    "internal": "Nott",
     "skins": [
       "53901",
       "53902",
@@ -1621,6 +1730,7 @@
   },
   "Bright": {
     "prefix": "540",
+    "internal": "Bright",
     "skins": [
       "54001",
       "54002",
@@ -1633,6 +1743,7 @@
   },
   "Bonnie": {
     "prefix": "541",
+    "internal": "Bonnie",
     "skins": [
       "54101",
       "54102",
@@ -1643,6 +1754,7 @@
   },
   "Tachi": {
     "prefix": "542",
+    "internal": "Tachi",
     "skins": [
       "54201",
       "54202",
@@ -1656,6 +1768,7 @@
   },
   "Aya": {
     "prefix": "543",
+    "internal": "Yao",
     "skins": [
       "54301",
       "54302",
@@ -1668,6 +1781,7 @@
   },
   "Yan": {
     "prefix": "544",
+    "internal": "Painter",
     "skins": [
       "54401",
       "54402",
@@ -1679,6 +1793,7 @@
   },
   "Yue": {
     "prefix": "545",
+    "internal": "Aim",
     "skins": [
       "54501",
       "54503",
@@ -1690,6 +1805,7 @@
   },
   "Teeri": {
     "prefix": "546",
+    "internal": "Hecate",
     "skins": [
       "54601",
       "54602",
@@ -1703,6 +1819,7 @@
   },
   "Bijan": {
     "prefix": "548",
+    "internal": "SunCe",
     "skins": [
       "54801",
       "54802",
@@ -1714,6 +1831,7 @@
   },
   "Heino": {
     "prefix": "563",
+    "internal": "HaiNuo",
     "skins": [
       "56301",
       "56302"
@@ -1721,6 +1839,7 @@
   },
   "Erin": {
     "prefix": "567",
+    "internal": "AiLin",
     "skins": [
       "56701",
       "56702",
@@ -1731,39 +1850,47 @@
   },
   "Ming": {
     "prefix": "568",
+    "internal": "MingShiYin",
     "skins": [
       "56801",
       "56802"
     ]
   },
-  "Flowborn": {
+  "ShaoSiYuan": {
     "prefix": "577",
+    "internal": "ShaoSiYuan",
     "skins": []
   },
-  "Tamyn": {
+  "Ciyuanfashi": {
     "prefix": "582",
+    "internal": "Ciyuanfashi",
     "skins": []
   },
   "CiYuansheshou": {
     "prefix": "584",
+    "internal": "CiYuansheshou",
     "skins": []
   },
   "MaChao": {
     "prefix": "593",
+    "internal": "MaChao",
     "skins": []
   },
   "LiXin": {
     "prefix": "595",
+    "internal": "LiXin",
     "skins": []
   },
   "Goverra": {
     "prefix": "596",
+    "internal": "MiLaiDi",
     "skins": [
       "59601"
     ]
   },
   "Biron": {
     "prefix": "597",
+    "internal": "KuangTie",
     "skins": [
       "59701",
       "59702"
@@ -1771,6 +1898,7 @@
   },
   "Bolt Baron": {
     "prefix": "598",
+    "internal": "DaSiKong",
     "skins": [
       "59801",
       "59802"
@@ -1778,6 +1906,7 @@
   },
   "Billow": {
     "prefix": "599",
+    "internal": "LvMeng",
     "skins": [
       "59901",
       "59902"
