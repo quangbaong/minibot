@@ -16,7 +16,7 @@ minibot/
 
 ### User
 - 🎭 **Tướng** — chọn theo chữ cái + search realtime tướng/skin
-- 🛠️ **Bổ trợ** — Cam Xa (105–295%), HD Chiêu, MOD ROV, Máy Yếu, Nút Bấm
+- 🛠️ **Bổ trợ** — Cam Xa (105–295%), HD Chiêu, MOD ROV, Nút Bấm
 - 🛒 **Giỏ** — review + 1 tap Chạy Mod, badge VIP nếu có
 - ⚙️ **Khác** — check VIP, copy ID, toggle haptic/confetti, donate, reset
 
@@ -40,7 +40,7 @@ minibot/
 ```bash
 py minibot/build_hero_data.py
 ```
-Đọc `id_skinnn.txt` → cập nhật:
+Đọc `id_skinnn.txt` (auto: root → minibot → cwd) → cập nhật:
 - `catalog.json` (UI list skin)
 - `hero_data_full.json`, `hero_icons.json`, `skin_codes.json`
 - `Sources_Bot/<hero>/gốc.txt` + `sources.txt` (bot chaymod)
@@ -49,10 +49,19 @@ Icon CDN:
 - **Hero** (default): `301500.jpg` — `{cdn}{prefix}0.jpg`
 - **Skin** (id ≥ 1): `301501head.jpg` — `{cdn}{prefix}{n}head.jpg`
 
-Chỉ JSON minibot (không đụng Sources_Bot):
+Lệnh hữu ích:
 ```bash
-py minibot/build_hero_data.py --no-sources
+py minibot/build_hero_data.py                       # full sync (chờ Enter khi xong)
+py minibot/build_hero_data.py --no-sources          # chỉ JSON minibot
+py minibot/build_hero_data.py --dry-run --diff -v   # xem thay đổi, không ghi
+py minibot/build_hero_data.py --check               # validate (exit 1 nếu lỗi)
+py minibot/build_hero_data.py --backup              # backup JSON trước khi ghi
+py minibot/build_hero_data.py --hero Airi           # rebuild 1 tướng (merge)
+py minibot/build_hero_data.py --prune-sources       # xoá folder Sources_Bot orphan
+py minibot/build_hero_data.py --sync-id-copy        # copy id_skinnn vào minibot/
+py minibot/build_hero_data.py --no-pause            # thoát ngay (CI / script)
 ```
+Hoặc double-click `minibot/build_hero_data.bat` — cửa sổ **không tự đóng** (chờ Enter).
 Mỗi lần thêm/xoá skin trong `id_skinnn.txt` → chạy lại.
 
 ### 2) Push GitHub Pages

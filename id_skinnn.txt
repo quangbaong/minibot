@@ -140,6 +140,7 @@
 -->11405 : Omega Hộ vệ Carano
 -->11406 : Omega Sứ Thanh Hoa
 -->11407 : Omega Samurai Cơ Hóa
+-->11408 : Omega Khởi Nguyên
 -->
 ####
 115_GaoJianLi
@@ -232,6 +233,7 @@
 -->12105 : Marja Chủ hôn
 -->12106 : Marja Phù Quang Mạc Ảnh
 -->12107 : Marja Hi Phi
+-->12108 : Marja Huyết Nộ Cấm Vệ
 -->
 ####
 123_LvBu
@@ -369,7 +371,7 @@
 -->13212 : Hayate Thống soái Dạ Ưng
 -->13213 : Hayate Siêu đạo chích Kid
 -->13214 : Hayate Đầu bếp Yakitori
--->13215 : Hayate 13215
+-->13215 : Hayate Thứ nguyên vệ thần
 -->
 ####
 133_DiRenJie
@@ -497,6 +499,7 @@
 -->14410 : Taara Hoa hồng đỏ tươi
 -->14411 : Taara Thần chiến tranh
 -->14412 : Taara Shion
+-->14413 : Taara Huyết Nộ Cấm Vệ
 -->
 ####
 146_HongFu
@@ -845,6 +848,7 @@
 -->18905 : Krizzix Trưởng lão
 -->18906 : Krizzix Cursed Corpse
 -->18907 : Krizzix Thám tử tư
+-->18908 : Krizzix Huyết Nộ Cấm Vệ
 -->
 ####
 190_ZhuGeLiang
@@ -996,6 +1000,7 @@
 -->50309 : Zuka Rapper Big Panda
 -->50310 : Zuka Ngư ông đắc lợi
 -->50311 : Zuka Xích Hùng Chiến Giáp
+-->50313 : Zuka Mafia
 -->
 ####
 504_WonderWoman
@@ -1182,6 +1187,7 @@
 -->52111 : Florentino Hỏa diệm Thần long
 -->52112 : Florentino S - Quang vinh
 -->52113 : Florentino Kỷ Nguyên Hổ Phách
+-->52114 : Florentino Quán Quân
 -->
 ####
 522_Errol
