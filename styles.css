@@ -48,12 +48,56 @@
   --ease-out: cubic-bezier(.2,.9,.2,1);
   --ease-spring: cubic-bezier(.34,1.56,.64,1);
   --ease-soft: cubic-bezier(.4,.0,.2,1);
+
+  /* motion durations — 1 chỗ chỉnh tốc độ toàn app */
+  --dur-fast: .16s;
+  --dur:      .26s;
+  --dur-slow: .42s;
+
+  /* spacing scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 22px;
+  --sp-6: 30px;
+
+  /* type scale */
+  --fs-xs:  11px;
+  --fs-sm:  12.5px;
+  --fs-md:  14px;
+  --fs-lg:  16px;
+  --fs-xl:  22px;
+
+  /* semantic colors */
+  --c-ok:   var(--c-mint);
+  --c-warn: var(--c-amber);
+  --c-err:  var(--c-danger);
+  --c-info: var(--c-cyan);
+
+  /* elevation scale */
+  --e-1: 0 2px 8px rgba(0,0,0,.22);
+  --e-2: 0 8px 26px rgba(0,0,0,.36);
+  --e-3: 0 22px 60px rgba(0,0,0,.50);
+
+  /* layout */
+  --app-max: 560px;
+  --tabbar-h: 78px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  /* Telegram viewport thật (JS set) — fallback dvh */
+  --vh: 100dvh;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none !important}
 html{margin:0;padding:0;height:100%}
-body{margin:0;padding:0 0 170px 0;min-height:100vh;min-height:100dvh}
+body{
+  margin:0;
+  /* chừa chỗ cho tab bar nổi + safe area, không hardcode nữa */
+  padding:0 0 calc(var(--tabbar-h) + var(--safe-b) + var(--sp-6)) 0;
+  min-height:100vh;min-height:var(--vh);
+}
 button{font-family:inherit}
 input,textarea{font-family:inherit}
 
@@ -844,22 +888,56 @@ main{padding:6px 14px 50px}
 }
 .qchip:active{transform:scale(.94);background:linear-gradient(135deg,rgba(108,140,255,.22),rgba(177,108,255,.16))}
 
-/* ═══ TOAST ═══ */
-.toast{
-  position:fixed;left:50%;top:88px;transform:translateX(-50%) translateY(-40px);
-  background:rgba(14,16,25,.94);color:#fff;
-  padding:11px 20px;border-radius:14px;font-size:13px;font-weight:600;
-  border:1px solid var(--glass-bd-hi);
-  box-shadow:0 14px 40px rgba(0,0,0,.5);
-  backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);
-  opacity:0;pointer-events:none;
-  transition:all .35s var(--ease-spring);
-  z-index:1000;max-width:88%;text-align:center;
+/* ═══ TOAST STACK ═══ */
+.toast-stack{
+  position:fixed;z-index:1000;
+  top:calc(var(--safe-t) + 12px);
+  left:50%;transform:translateX(-50%);
+  width:min(92vw, 420px);
+  display:flex;flex-direction:column;gap:var(--sp-2);
+  pointer-events:none;
 }
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.success{border-color:rgba(52,211,153,.55);box-shadow:0 14px 40px rgba(52,211,153,.25)}
-.toast.error{border-color:rgba(255,85,119,.55);box-shadow:0 14px 40px rgba(255,85,119,.25)}
-.toast.warn{border-color:rgba(255,210,95,.55);box-shadow:0 14px 40px rgba(255,210,95,.22)}
+.toast-item{
+  pointer-events:auto;cursor:pointer;
+  position:relative;overflow:hidden;
+  display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:center;
+  padding:11px 14px;border-radius:var(--r-md);
+  background:rgba(14,16,25,.94);color:var(--tg-text-strong);
+  border:1px solid var(--glass-bd-hi);
+  box-shadow:var(--e-3);
+  backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);
+  animation:toastIn .34s var(--ease-spring) both;
+  will-change:transform,opacity;
+}
+.toast-item.out{animation:toastOut .22s var(--ease-soft) both}
+@keyframes toastIn{from{opacity:0;transform:translateY(-16px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-12px) scale(.96)}}
+
+.toast-ic{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;line-height:1;flex-shrink:0;
+  background:var(--glass-2);color:var(--tg-text-strong);
+}
+.toast-tx{font-size:13px;font-weight:600;line-height:1.4;min-width:0;word-break:break-word}
+.toast-bar{
+  position:absolute;left:0;bottom:0;height:2px;width:100%;
+  transform-origin:left center;
+  background:currentColor;opacity:.5;
+  animation:toastBar linear forwards;
+}
+@keyframes toastBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+.toast-item.success{border-color:rgba(63,191,150,.55);color:var(--c-ok)}
+.toast-item.success .toast-ic{background:rgba(63,191,150,.18);color:var(--c-ok)}
+.toast-item.error{border-color:rgba(232,90,120,.55);color:var(--c-err)}
+.toast-item.error .toast-ic{background:rgba(232,90,120,.18);color:var(--c-err)}
+.toast-item.warn{border-color:rgba(230,193,90,.55);color:var(--c-warn)}
+.toast-item.warn .toast-ic{background:rgba(230,193,90,.18);color:var(--c-warn)}
+.toast-item.info{border-color:rgba(91,191,217,.5);color:var(--c-info)}
+.toast-item.info .toast-ic{background:rgba(91,191,217,.18);color:var(--c-info)}
+/* chữ luôn dễ đọc — màu type chỉ dùng cho viền/icon/thanh đếm */
+.toast-item .toast-tx{color:var(--tg-text-strong)}
 
 /* ═══ LOADER ═══ */
 .loader{
@@ -1062,19 +1140,85 @@ main{padding:6px 14px 50px}
 .set-card .si-donate{background:linear-gradient(135deg,#c9a14a,#3fbf96)}
 .set-card .si-reset{background:linear-gradient(135deg,#e85a78,#c9a14a)}
 .set-card .si-about{background:linear-gradient(135deg,#4aa8c4,#5b78d4)}
+.set-card .si-perf{background:linear-gradient(135deg,#7b93e8,#3fbf96)}
 .set-card h5{margin:0;font-size:13.5px;font-weight:700;color:var(--tg-text-strong)}
 .set-card p{margin:2px 0 0;font-size:11.5px;color:var(--tg-hint);line-height:1.4}
 .set-card .set-val{font-size:12px;color:var(--c-iris);font-weight:700}
 
 /* ═══ RESPONSIVE ═══ */
+
+/* — máy rất nhỏ (Galaxy Fold gập, <340px) — */
 @media (max-width:340px){
   .admin-grid{grid-template-columns:1fr}
-  .alpha-grid{grid-template-columns:repeat(4,1fr)}
-  .hero-grid{grid-template-columns:repeat(2,1fr)}
+  .alpha-grid{grid-template-columns:repeat(4,1fr);gap:7px}
+  .hero-grid{grid-template-columns:1fr}
+  .skin-grid.icon-mode{grid-template-columns:repeat(2,1fr);gap:9px}
+  .zoom-grid{grid-template-columns:repeat(3,1fr)}
+  .stats-strip{gap:6px}
+  .stat-chip{padding:9px 9px}
+  .page-head h2{font-size:19px}
+  .user-card{grid-template-columns:46px 1fr;row-gap:10px;padding:12px}
+  .user-card .vip-pill{grid-column:1/-1;justify-self:start}
+  .avatar{width:46px;height:46px;font-size:17px}
+  .tab label{font-size:9px}
+  .cart-actions{grid-template-columns:1fr}
+  .idlist-actions-3{grid-template-columns:1fr 1fr!important}
+  .idlist-actions-3 #idListApply{grid-column:1/-1}
 }
+
+/* — điện thoại lớn — */
+@media (min-width:430px){
+  .alpha-grid{grid-template-columns:repeat(6,1fr)}
+}
+
+/* — canh giữa khi màn rộng — */
 @media (min-width:520px){
-  body{max-width:520px;margin:0 auto}
+  body{max-width:var(--app-max);margin:0 auto}
+  .tabs{left:50%;right:auto;transform:translateX(-50%);width:min(var(--app-max), calc(100vw - 28px))}
 }
+
+/* — tablet dọc — */
+@media (min-width:600px){
+  :root{--app-max:640px}
+  .alpha-grid{grid-template-columns:repeat(7,1fr)}
+  .skin-grid.icon-mode{grid-template-columns:repeat(4,1fr)}
+  .hero-grid{grid-template-columns:1fr 1fr}
+  .zoom-grid{grid-template-columns:repeat(5,1fr)}
+  .settings-list,.extras-list{grid-template-columns:1fr 1fr;display:grid}
+}
+
+/* — tablet ngang / desktop — */
+@media (min-width:900px){
+  :root{--app-max:820px}
+  .alpha-grid{grid-template-columns:repeat(9,1fr)}
+  .skin-grid.icon-mode{grid-template-columns:repeat(5,1fr)}
+  .hero-grid{grid-template-columns:repeat(3,1fr)}
+  .zoom-grid{grid-template-columns:repeat(6,1fr)}
+  .page-head h2{font-size:25px}
+}
+
+/* — màn thấp / xoay ngang: nén chiều cao — */
+@media (max-height:520px) and (orientation:landscape){
+  .topbar{padding:10px 14px 4px}
+  .user-card{padding:9px 12px;grid-template-columns:42px 1fr auto}
+  .avatar{width:42px;height:42px;font-size:16px}
+  .stats-strip{margin:8px 14px 2px}
+  .stat-chip{padding:7px 10px}
+  .page-head{margin:12px 4px 10px}
+  .page-head h2{font-size:18px}
+  .page-head p{display:none}
+  .chatw{height:min(76vh, 420px)}
+  .empty{padding:24px 20px}
+  .run-anim{width:88px;height:88px;margin-bottom:12px}
+  .run-emoji svg{width:28px;height:28px}
+}
+
+/* — bàn phím ảo mở (viewport co lại): tab bar không che input — */
+body.kb-open .tabs{transform:translateY(140%);pointer-events:none}
+@media (min-width:520px){
+  body.kb-open .tabs{transform:translateX(-50%) translateY(140%)}
+}
+.tabs{transition:transform var(--dur) var(--ease-soft)}
 
 /* ═══ THEME — LIGHT MODE COMPAT ═══ */
 body.tg-light{
@@ -1394,3 +1538,266 @@ body.tg-light #aurora{
   0%,60%,100%{opacity:.3;transform:translateY(0)}
   30%{opacity:1;transform:translateY(-4px)}
 }
+
+/* ════════════════════════════════════════════════════════════
+   v7 — ACCESSIBILITY · MOTION · PERFORMANCE
+   ════════════════════════════════════════════════════════════ */
+
+/* — focus nhìn thấy được khi dùng bàn phím (không ảnh hưởng chạm) — */
+:focus{outline:none}
+:focus-visible{
+  outline:2px solid var(--c-iris);
+  outline-offset:2px;
+  border-radius:var(--r-xs);
+}
+.btn-primary:focus-visible,.btn-danger:focus-visible{outline-color:#fff}
+
+/* — người dùng bật "giảm chuyển động" trong hệ điều hành — */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+  .blob{animation:none}
+  .chat-body{scroll-behavior:auto}
+}
+
+/* — chế độ hiệu ứng nhẹ: máy yếu / user tự tắt trong tab Khác —
+   bỏ blur nền (thủ phạm chính gây giật), giữ nguyên bố cục & màu. */
+body.perf-lite .blob{animation:none;filter:blur(46px);opacity:.38}
+body.perf-lite #noise{display:none}
+body.perf-lite .user-card::before,
+body.perf-lite .btn-primary::before{display:none}
+body.perf-lite .avatar::after{animation:none}
+body.perf-lite *{
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+body.perf-lite .tabs{background:rgba(12,14,22,.95)}
+body.perf-lite .chatw{background:linear-gradient(180deg,rgba(22,25,40,1),rgba(12,14,23,1))}
+body.perf-lite .toast-item{background:rgba(14,16,25,.98)}
+body.perf-lite .loader,
+body.perf-lite .run-overlay{background:rgba(7,8,13,.97)}
+/* tắt luôn animation vào của các item lưới — render tức thì */
+body.perf-lite .alpha-cell,
+body.perf-lite .hero-cell,
+body.perf-lite .skin-cell,
+body.perf-lite .skin-icon-cell,
+body.perf-lite .cart-item,
+body.perf-lite .extra-card,
+body.perf-lite .set-card,
+body.perf-lite .admin-card,
+body.perf-lite .search-row,
+body.perf-lite .zoom-cell{animation:none!important}
+
+/* — hint cho trình duyệt: lưới dài chỉ vẽ phần đang nhìn thấy — */
+.hero-grid > *,
+.skin-grid > *,
+.search-results > *,
+.cart-list > *{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 76px;
+}
+.skin-grid.icon-mode > *{contain-intrinsic-size:auto 150px}
+
+/* ════════════════════════════════════════════════════════════
+   v7 — TRẠNG THÁI NÚT (loading / disabled)
+   ════════════════════════════════════════════════════════════ */
+.btn-primary[disabled],.btn-ghost[disabled],.btn-danger[disabled]{
+  opacity:.5;pointer-events:none;
+}
+.btn-primary.is-loading,
+.btn-ghost.is-loading,
+.btn-danger.is-loading{
+  pointer-events:none;color:transparent!important;
+}
+.btn-primary.is-loading::after,
+.btn-ghost.is-loading::after,
+.btn-danger.is-loading::after{
+  content:'';position:absolute;inset:0;margin:auto;
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;
+  animation:spin .7s linear infinite;
+}
+.btn-ghost.is-loading::after{border-color:rgba(255,255,255,.18);border-top-color:var(--c-iris)}
+/* chớp xanh khi thao tác thành công */
+.flash-ok{animation:flashOk .5s var(--ease-out)}
+@keyframes flashOk{
+  0%{box-shadow:0 0 0 0 rgba(63,191,150,.55)}
+  100%{box-shadow:0 0 0 14px rgba(63,191,150,0)}
+}
+/* rung nhẹ khi lỗi (thị giác thay cho haptic) */
+.shake{animation:shake .36s var(--ease-soft)}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-6px)}
+  45%{transform:translateX(5px)}
+  70%{transform:translateX(-3px)}
+}
+
+/* ════════════════════════════════════════════════════════════
+   v7 — MODAL XÁC NHẬN (thay confirm() của trình duyệt)
+   ════════════════════════════════════════════════════════════ */
+.modal-back{
+  position:fixed;inset:0;z-index:2500;
+  background:rgba(5,6,11,.72);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:flex;align-items:center;justify-content:center;
+  padding:22px;
+  animation:fadeIn .22s ease both;
+}
+.modal-back.out{animation:fadeOut .18s ease both}
+@keyframes fadeOut{to{opacity:0}}
+.modal-card{
+  width:100%;max-width:340px;
+  background:linear-gradient(160deg,rgba(30,34,54,.98),rgba(16,18,28,.98));
+  border:1px solid var(--glass-bd-hi);
+  border-radius:var(--r-xl);
+  padding:24px 20px 18px;
+  text-align:center;
+  box-shadow:var(--e-3), var(--refraction);
+  animation:popUp .38s var(--ease-spring) both;
+}
+.modal-ic{
+  width:52px;height:52px;border-radius:18px;margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  background:linear-gradient(135deg,rgba(232,90,120,.28),rgba(166,122,224,.2));
+  border:1px solid rgba(232,90,120,.35);
+  color:var(--c-err);
+}
+.modal-card.ask .modal-ic{
+  background:linear-gradient(135deg,rgba(123,147,232,.28),rgba(166,122,224,.2));
+  border-color:rgba(123,147,232,.35);color:var(--c-iris);
+}
+.modal-card h3{margin:0 0 6px;font-size:17px;font-weight:800;color:var(--tg-text-strong)}
+.modal-card p{margin:0 0 18px;font-size:13px;line-height:1.55;color:var(--tg-hint)}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.modal-actions .btn-primary,
+.modal-actions .btn-ghost,
+.modal-actions .btn-danger{padding:13px;font-size:13.5px}
+
+/* ════════════════════════════════════════════════════════════
+   v7 — SKELETON KHI TẢI
+   ════════════════════════════════════════════════════════════ */
+.skel-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.skel-cell{
+  aspect-ratio:1;border-radius:var(--r-md);
+  background:linear-gradient(90deg,var(--glass-1) 25%,var(--glass-2) 50%,var(--glass-1) 75%);
+  background-size:200% 100%;
+  animation:skelflow 1.4s ease-in-out infinite;
+  border:1px solid var(--glass-bd);
+}
+.skel-row{
+  height:76px;border-radius:var(--r-md);margin-bottom:8px;
+  background:linear-gradient(90deg,var(--glass-1) 25%,var(--glass-2) 50%,var(--glass-1) 75%);
+  background-size:200% 100%;
+  animation:skelflow 1.4s ease-in-out infinite;
+  border:1px solid var(--glass-bd);
+}
+@media (min-width:430px){.skel-grid{grid-template-columns:repeat(6,1fr)}}
+@media (min-width:600px){.skel-grid{grid-template-columns:repeat(7,1fr)}}
+
+/* thanh tiến trình mảnh trên đỉnh khi đang tải ngầm */
+.top-progress{
+  position:fixed;top:0;left:0;right:0;height:2.5px;z-index:3000;
+  background:transparent;pointer-events:none;
+  opacity:0;transition:opacity .3s;
+}
+.top-progress.on{opacity:1}
+.top-progress::after{
+  content:'';display:block;height:100%;width:40%;
+  background:linear-gradient(90deg,transparent,var(--c-iris),var(--c-violet),transparent);
+  animation:topbarSlide 1.1s var(--ease-soft) infinite;
+}
+@keyframes topbarSlide{
+  from{transform:translateX(-100%)}
+  to{transform:translateX(350%)}
+}
+
+/* ════════════════════════════════════════════════════════════
+   v7 — CHAT NÂNG CẤP
+   ════════════════════════════════════════════════════════════ */
+/* gộp tin liên tiếp cùng người gửi: ẩn avatar, thu khoảng cách */
+.chat-msg.grouped{margin-top:-6px}
+.chat-msg.grouped .chat-ava-sm{visibility:hidden;height:0;margin-bottom:0}
+.chat-msg.grouped .chat-time{display:none}
+.chat-msg.grouped.bot .chat-bubble{border-radius:16px 16px 16px 5px}
+
+/* pill "tin mới" khi user đang cuộn đọc lịch sử */
+.chat-newpill{
+  position:absolute;left:50%;transform:translateX(-50%);
+  bottom:14px;z-index:5;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:99px;border:1px solid rgba(123,147,232,.45);
+  background:linear-gradient(135deg,rgba(123,147,232,.95),rgba(166,122,224,.92));
+  color:#fff;font-size:11.5px;font-weight:800;cursor:pointer;
+  box-shadow:var(--e-2);
+  animation:toastIn .3s var(--ease-spring) both;
+}
+/* nút phóng to khung chat */
+.chatw.maximized{
+  left:8px!important;right:8px!important;top:calc(var(--safe-t) + 8px)!important;
+  bottom:calc(var(--tabbar-h) + var(--safe-b) + 8px)!important;
+  width:auto!important;height:auto!important;
+  max-width:none;
+}
+@media (min-width:600px){
+  .chatw.maximized{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(var(--app-max),94vw)!important}
+}
+
+/* trạng thái kết nối */
+.chat-dot.warn{background:var(--c-warn);box-shadow:0 0 8px var(--c-warn)}
+.chatw-head .chat-retry{
+  font-size:10.5px;font-weight:700;color:var(--c-iris);
+  background:none;border:0;padding:0 0 0 6px;cursor:pointer;text-decoration:underline;
+}
+
+/* tin lỗi hệ thống trong chat */
+.chat-sys.err{color:var(--c-err);background:rgba(232,90,120,.12);border-color:rgba(232,90,120,.28)}
+
+/* ════════════════════════════════════════════════════════════
+   v7 — LIGHT THEME: các thành phần trước đây bị hardcode màu tối
+   ════════════════════════════════════════════════════════════ */
+body.tg-light{
+  --tg-text-strong:#12151f;
+  --glass-shd: 0 4px 14px rgba(20,26,45,.10), 0 16px 40px rgba(20,26,45,.12);
+  --e-1: 0 2px 8px rgba(20,26,45,.10);
+  --e-2: 0 8px 26px rgba(20,26,45,.14);
+  --e-3: 0 22px 60px rgba(20,26,45,.18);
+  --refraction:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    inset 0 -1px 1px rgba(0,0,0,.05),
+    0 0 0 .5px rgba(0,0,0,.04);
+}
+body.tg-light .tabs{background:rgba(255,255,255,.78)}
+body.tg-light .toast-item{background:rgba(255,255,255,.96);color:#12151f}
+body.tg-light .toast-item .toast-tx{color:#12151f}
+body.tg-light .modal-card{background:linear-gradient(160deg,rgba(255,255,255,.99),rgba(244,246,252,.99))}
+body.tg-light .loader{background:rgba(248,249,253,.9)}
+body.tg-light .run-overlay{background:rgba(248,249,253,.92)}
+body.tg-light .run-card h3{background:linear-gradient(135deg,#22283a,var(--c-iris));-webkit-background-clip:text;background-clip:text}
+body.tg-light .chatw{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(243,245,251,.98))}
+body.tg-light .chatw-head{background:rgba(248,249,253,.95);border-bottom-color:rgba(0,0,0,.07)}
+body.tg-light .chatw-head::before{background:rgba(0,0,0,.14)}
+body.tg-light .chatw-id h4{color:#12151f}
+body.tg-light .chatw-btn{color:#39405a}
+body.tg-light .chat-msg.bot .chat-bubble{
+  background:#fff;color:#1a1f2e;border-color:rgba(0,0,0,.08);
+  box-shadow:0 2px 8px rgba(20,26,45,.08);
+}
+body.tg-light .chat-typing{background:#fff;border-color:rgba(0,0,0,.08)}
+body.tg-light .chat-sys{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.06)}
+body.tg-light .admin-card input,
+body.tg-light .admin-card textarea,
+body.tg-light .rand-custom input,
+body.tg-light #idListInput{background:rgba(255,255,255,.9);color:#12151f}
+body.tg-light .idlist-preview{background:rgba(0,0,0,.03)}
+body.tg-light .alpha-cell .ac-count{background:rgba(255,255,255,.75);color:#4a5268}
+body.tg-light .cs-badge{color:#062018}
+body.tg-light .web-login-gate{background:rgba(248,249,253,.97)}
+body.tg-light .wlg-card h2{background:linear-gradient(135deg,#22283a,var(--c-iris));-webkit-background-clip:text;background-clip:text}
+body.tg-light .chatw-badge{border-color:#fff}

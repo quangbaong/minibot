@@ -9,7 +9,7 @@
 <title>BANNEI MOD LQ</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=11">
+<link rel="stylesheet" href="styles.css?v=12">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -89,6 +89,13 @@
       <button class="clr" id="heroSearchClr" type="button" aria-label="Clear" hidden>×</button>
     </div>
 
+    <div class="skel-grid" id="alphaSkel" aria-hidden="true">
+      <div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div>
+      <div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div>
+      <div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div>
+      <div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div>
+      <div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div>
+    </div>
     <div class="alpha-grid" id="alphaGrid"></div>
     <div class="search-results" id="heroSearchResults" hidden></div>
   </div>
@@ -341,6 +348,15 @@
       <span class="set-val" id="confettiVal">BẬT</span>
     </div>
 
+    <div class="set-card" data-action="perflite">
+      <div class="set-icon si-perf"><svg viewBox="0 0 24 24" fill="none"><path d="M13 3 5.5 13.5H11l-.8 7.5L18.5 10H13l0-7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+      <div>
+        <h5>Hiệu ứng nhẹ</h5>
+        <p>Tắt blur nền — mượt hơn trên máy yếu</p>
+      </div>
+      <span class="set-val" id="perfVal">TẮT</span>
+    </div>
+
     <div class="set-card" data-action="contact">
       <div class="set-icon si-chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3v-3H7.5A2.5 2.5 0 0 1 5 13.5v-7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
       <div>
@@ -372,9 +388,9 @@
       <div class="set-icon si-about"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.5V17M12 7.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
       <div>
         <h5>BANNEI MOD LQ</h5>
-        <p>Liquid Glass 6.3 · icon + ID list</p>
+        <p>Liquid Glass 7.0 · giao diện + phản hồi mới</p>
       </div>
-      <span class="set-val" id="versionVal">v6.3</span>
+      <span class="set-val" id="versionVal">v7.0</span>
     </div>
 
   </div>
@@ -472,7 +488,8 @@
 </main>
 
 <!-- ═══ FLOATING UI ═══ -->
-<div class="toast" id="toast"></div>
+<div class="top-progress" id="topProgress" aria-hidden="true"></div>
+<div class="toast-stack" id="toastStack" role="status" aria-live="polite"></div>
 
 <div class="loader" id="loader" hidden>
   <div class="spinner"></div>
@@ -508,13 +525,15 @@
       <h4>BANNEI Bot</h4>
       <p id="chatStatus"><span class="chat-dot"></span> Trực tuyến</p>
     </div>
-    <button class="chatw-btn" id="chatMin" type="button" title="Thu nhỏ">▁</button>
-    <button class="chatw-btn close" id="chatClose" type="button" title="Đóng">✕</button>
+    <button class="chatw-btn" id="chatMax" type="button" title="Phóng to" aria-label="Phóng to">⤢</button>
+    <button class="chatw-btn" id="chatMin" type="button" title="Thu nhỏ" aria-label="Thu nhỏ">▁</button>
+    <button class="chatw-btn close" id="chatClose" type="button" title="Đóng" aria-label="Đóng">✕</button>
   </div>
   <div class="chat-body" id="botLog"></div>
+  <button class="chat-newpill" id="chatNewPill" type="button" hidden>↓ Tin mới</button>
 </div>
 <button class="chatw-fab" id="chatFab" type="button" hidden>🤖<span class="chatw-badge" id="chatFabBadge"></span></button>
 
-<script src="app.js?v=19"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>

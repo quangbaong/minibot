@@ -32,6 +32,7 @@ const state = {
   settings: loadSettings(),
   heroIcons: {},
   skinCodes: {},
+  searchIndex: [],
 };
 
 const EXTRA_KEYS = new Set(['Cam Xa', 'HD Chiêu', 'Server']);
@@ -79,13 +80,19 @@ async function checkApiConnection() {
     toast('⚠️ Chưa có địa chỉ bot. Gõ /start trong bot rồi mở lại Mini App.', 'error');
     return;
   }
+  progressStart();
   try {
     const r = await fetch(API_BASE + '/api/health', { cache: 'no-store' });
     const j = await r.json();
-    if (j && j.ok) toast('🟢 Đã kết nối bot trực tiếp', 'success');
-    else throw new Error('bad');
+    if (!j || !j.ok) throw new Error('bad');
+    // Kết nối tốt = im lặng, chỉ báo ở khung chat (đỡ toast rác mỗi lần mở app)
+    setChatStatus('on', 'Trực tuyến');
+    toast('🟢 Đã kết nối bot', 'success', 1500);
   } catch {
+    setChatStatus('off', 'Mất kết nối', true);
     toast('⚠️ Không kết nối được bot (tunnel có thể đã đổi). Gõ /start rồi mở lại.', 'error');
+  } finally {
+    progressEnd();
   }
 }
 
@@ -121,15 +128,38 @@ function _setFabBadge() {
   else { b.textContent = ''; b.classList.remove('show'); }
 }
 
+/* ── cuộn thông minh: chỉ tự xuống đáy khi user đang ở đáy ── */
+function _isChatNearBottom() {
+  const box = $('botLog');
+  if (!box) return true;
+  return box.scrollHeight - box.scrollTop - box.clientHeight < 72;
+}
+function _scrollChatEnd(smooth) {
+  const box = $('botLog');
+  if (!box) return;
+  box.scrollTo({ top: box.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+  _toggleNewPill(false);
+}
+function _toggleNewPill(show) {
+  const pill = $('chatNewPill');
+  if (pill) pill.hidden = !show;
+}
+/* gọi TRƯỚC khi thêm tin, dùng kết quả để quyết định sau khi thêm */
+function _afterAppend(wasAtBottom) {
+  if (wasAtBottom) _scrollChatEnd(false);
+  else if (_chatVisible()) _toggleNewPill(true);
+}
+
 function _appendTyping() {
   const box = $('botLog');
   if (!box || $('chatTyping')) return;
+  const stick = _isChatNearBottom();
   const t = document.createElement('div');
   t.id = 'chatTyping';
   t.className = 'chat-typing';
   t.innerHTML = '<span></span><span></span><span></span>';
   box.appendChild(t);
-  box.scrollTop = box.scrollHeight;
+  _afterAppend(stick);
 }
 function _removeTyping() {
   const t = $('chatTyping');
@@ -141,14 +171,26 @@ function _nowTime() {
   return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
 }
 
+// Gộp tin liên tiếp cùng người gửi trong 90 giây → bớt lặp avatar/giờ
+let _lastRowKind = null;
+let _lastRowAt = 0;
+const GROUP_WINDOW_MS = 90_000;
+
+function _resetGrouping() { _lastRowKind = null; _lastRowAt = 0; }
+
 // Tạo 1 dòng tin: bot có avatar + giờ, me căn phải + giờ
 function _appendRow(kind, contentEl) {
   const box = $('botLog');
   if (!box) return;
-  const row = document.createElement('div');
-  row.className = 'chat-msg ' + (kind === 'me' ? 'me' : 'bot');
+  const stick = _isChatNearBottom();
+  const side = kind === 'me' ? 'me' : 'bot';
+  const now = Date.now();
+  const grouped = _lastRowKind === side && (now - _lastRowAt) < GROUP_WINDOW_MS;
 
-  if (kind !== 'me') {
+  const row = document.createElement('div');
+  row.className = 'chat-msg ' + side + (grouped ? ' grouped' : '');
+
+  if (side !== 'me') {
     const av = document.createElement('div');
     av.className = 'chat-ava-sm';
     av.textContent = '🤖';
@@ -164,23 +206,29 @@ function _appendRow(kind, contentEl) {
   row.appendChild(col);
 
   box.appendChild(row);
-  box.scrollTop = box.scrollHeight;
-  if (!_chatVisible()) { _botUnread++; _setFabBadge(); }
+  _lastRowKind = side;
+  _lastRowAt = now;
+  _afterAppend(stick);
+
+  // chỉ tin từ bot mới tính là chưa đọc
+  if (side === 'bot' && !_chatVisible()) { _botUnread++; _setFabBadge(); }
 }
 
-// kind: 'bot' (mặc định) | 'me' | 'sys'
+// kind: 'bot' (mặc định) | 'me' | 'sys' | 'sys-err'
 function botLog(text, fileUrl, kind) {
   const box = $('botLog');
   if (!box) return;
   _removeTyping();
 
   if (text) {
-    if (kind === 'sys') {
+    if (kind === 'sys' || kind === 'sys-err') {
+      const stick = _isChatNearBottom();
       const s = document.createElement('div');
-      s.className = 'chat-sys';
+      s.className = 'chat-sys' + (kind === 'sys-err' ? ' err' : '');
       s.textContent = text;
       box.appendChild(s);
-      box.scrollTop = box.scrollHeight;
+      _resetGrouping();          // sau dòng hệ thống, tin kế tiếp hiện lại avatar
+      _afterAppend(stick);
     } else {
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble';
@@ -217,9 +265,10 @@ function botLink(url, label) {
 function showBotChat(clear) {
   const p = $('botPanel');
   if (!p) return;
-  if (clear) { const b = $('botLog'); if (b) b.innerHTML = ''; }
+  if (clear) { const b = $('botLog'); if (b) b.innerHTML = ''; _resetGrouping(); }
   const fab = $('chatFab'); if (fab) fab.hidden = true;
   _botUnread = 0; _setFabBadge();
+  _toggleNewPill(false);
   p.classList.remove('closing');
   p.hidden = false;
   refreshChatStatus();
@@ -228,6 +277,7 @@ function showBotChat(clear) {
   if (box && !box.children.length) {
     botLog('Xin chào! Mình là trợ lý BANNEI 🤖\nMọi tiến trình & file Mod sẽ hiện ngay tại đây.', null, 'bot');
   }
+  requestAnimationFrame(() => _scrollChatEnd(false));
 }
 
 function minimizeChat() {
@@ -252,6 +302,7 @@ function _initChatDrag() {
   let sx = 0, sy = 0, ox = 0, oy = 0, drag = false;
   head.addEventListener('pointerdown', (e) => {
     if (e.target.closest('.chatw-btn')) return;   // bỏ qua nút
+    if (win.classList.contains('maximized')) return;  // đang phóng to thì không kéo
     drag = true;
     const r = win.getBoundingClientRect();
     ox = r.left; oy = r.top; sx = e.clientX; sy = e.clientY;
@@ -286,45 +337,99 @@ async function drainBaseline() {
   } catch {}
 }
 
-async function refreshChatStatus() {
+function setChatStatus(kind, text, withRetry) {
   const el = $('chatStatus');
   if (!el) return;
-  if (!INIT_DATA) { el.innerHTML = '<span class="chat-dot off"></span> Mở trong Telegram'; return; }
-  if (!API_BASE) { el.innerHTML = '<span class="chat-dot off"></span> Chưa kết nối · gõ /start'; return; }
+  const dot = kind === 'on' ? '' : (kind === 'warn' ? ' warn' : ' off');
+  el.innerHTML = `<span class="chat-dot${dot}"></span> ${escapeHtml(text)}` +
+    (withRetry ? '<button type="button" class="chat-retry" id="chatRetry">thử lại</button>' : '');
+  const rt = $('chatRetry');
+  if (rt) rt.addEventListener('click', () => { haptic('light'); refreshChatStatus(); });
+}
+
+async function refreshChatStatus() {
+  if (!$('chatStatus')) return;
+  if (!INIT_DATA) return setChatStatus('off', 'Mở trong Telegram');
+  if (!API_BASE) return setChatStatus('off', 'Chưa kết nối · gõ /start');
+  setChatStatus('warn', 'Đang kiểm tra…');
   try {
     const r = await fetch(API_BASE + '/api/health', { cache: 'no-store' });
     const j = await r.json();
-    el.innerHTML = (j && j.ok)
-      ? '<span class="chat-dot"></span> Trực tuyến'
-      : '<span class="chat-dot off"></span> Mất kết nối';
+    if (j && j.ok) { _pollFails = 0; setChatStatus('on', 'Trực tuyến'); }
+    else setChatStatus('off', 'Mất kết nối', true);
   } catch {
-    el.innerHTML = '<span class="chat-dot off"></span> Mất kết nối · /start lại';
+    setChatStatus('off', 'Mất kết nối · /start lại', true);
   }
+}
+
+/* ── POLLING THÍCH ỨNG ──
+   Có tin → nhịp nhanh. Im lặng lâu → giãn dần (đỡ pin & đỡ tải bot).
+   Ẩn Mini App → dừng hẳn, quay lại → poll ngay. */
+const POLL_MIN = 1200;
+const POLL_MAX = 8000;
+let _pollDelay = POLL_MIN;
+let _pollFails = 0;
+let _pollOn = false;
+
+async function _pollOnce() {
+  const res = await fetch(API_BASE + '/api/poll?after=' + _pollSeq +
+    '&initData=' + encodeURIComponent(INIT_DATA));
+  const j = await res.json().catch(() => ({}));
+  let got = 0;
+  if (j.ok && Array.isArray(j.msgs)) {
+    for (const m of j.msgs) {
+      if (m.seq > _pollSeq) _pollSeq = m.seq;
+      if (m.clear) clearCartFromServer();
+      if (m.text || m.file) { botLog(m.text, m.file); got++; }
+      if (m.link) { botLink(m.link.url, m.link.label); got++; }
+    }
+  }
+  return got;
+}
+
+function _scheduleNextPoll() {
+  if (!_pollOn) return;
+  clearTimeout(_pollTimer);
+  _pollTimer = setTimeout(_pollTick, _pollDelay);
+}
+
+async function _pollTick() {
+  if (!_pollOn) return;
+  if (document.hidden) { _scheduleNextPoll(); return; }   // ẩn app → bỏ nhịp này
+  try {
+    const got = await _pollOnce();
+    if (_pollFails) { _pollFails = 0; setChatStatus('on', 'Trực tuyến'); }
+    // có tin → về nhịp nhanh; im lặng → giãn dần tới POLL_MAX
+    _pollDelay = got ? POLL_MIN : Math.min(POLL_MAX, Math.round(_pollDelay * 1.35));
+  } catch {
+    _pollFails++;
+    _pollDelay = Math.min(POLL_MAX, Math.round(_pollDelay * 1.6));
+    if (_pollFails === 3) setChatStatus('warn', 'Mạng chập chờn · đang thử lại');
+    if (_pollFails === 8) setChatStatus('off', 'Mất kết nối', true);
+  }
+  _scheduleNextPoll();
 }
 
 function startPolling() {
   if (!API_READY) return;
-  stopPolling();
-  _pollTimer = setInterval(async () => {
-    try {
-      const res = await fetch(API_BASE + '/api/poll?after=' + _pollSeq +
-        '&initData=' + encodeURIComponent(INIT_DATA));
-      const j = await res.json().catch(() => ({}));
-      if (j.ok && Array.isArray(j.msgs)) {
-        for (const m of j.msgs) {
-          if (m.seq > _pollSeq) _pollSeq = m.seq;
-          if (m.clear) clearCartFromServer();
-          if (m.text || m.file) botLog(m.text, m.file);
-          if (m.link) botLink(m.link.url, m.link.label);
-        }
-      }
-    } catch { /* im lặng, thử lại nhịp sau */ }
-  }, 1500);
+  _pollOn = true;
+  _pollDelay = POLL_MIN;
+  clearTimeout(_pollTimer);
+  _pollTimer = setTimeout(_pollTick, 400);   // nhịp đầu tiên gần như tức thì
 }
 
 function stopPolling() {
-  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+  _pollOn = false;
+  if (_pollTimer) { clearTimeout(_pollTimer); _pollTimer = null; }
 }
+
+// Quay lại app → kiểm tra ngay, không chờ hết nhịp giãn
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !_pollOn) return;
+  _pollDelay = POLL_MIN;
+  clearTimeout(_pollTimer);
+  _pollTimer = setTimeout(_pollTick, 150);
+});
 
 /* ═══════════════════════════════════════════════════════════════
    TELEGRAM LOGIN + VIP / ADMIN DETECTION
@@ -446,16 +551,47 @@ async function loadCatalog() {
 
     state.totalHeroes = folders.length;
     state.totalSkins = folders.reduce((n, f) => n + (state.catalog[f]?.length || 0), 0);
-    $('stHeroes').textContent = state.totalHeroes;
-    $('stSkins').textContent = state.totalSkins;
+    countUpTo($('stHeroes'), state.totalHeroes);
+    countUpTo($('stSkins'), state.totalSkins);
 
+    buildSearchIndex();
     hideLoader();
     renderAlphabet();
   } catch (e) {
-    $('loaderText').innerHTML =
-      '❌ Lỗi tải catalog<br><small style="opacity:.6">' + e.message + '</small>';
+    hideLoader();
+    const skel = $('alphaSkel');
+    if (skel) skel.hidden = true;
+    $('alphaGrid').innerHTML =
+      `<div class="empty" style="grid-column:1/-1">
+         <div class="empty-icon ei-svg">${SVG_SEARCH}</div>
+         <p>Không tải được danh sách tướng.<br><b>${escapeHtml(e.message)}</b></p>
+         <button type="button" class="btn-ghost" id="catalogRetry" style="margin-top:14px">Thử lại</button>
+       </div>`;
+    $('catalogRetry')?.addEventListener('click', (ev) =>
+      withBusy(ev.currentTarget, () => loadCatalog()));
     toast('Không tải được catalog: ' + e.message, 'error');
   }
+}
+
+/* Số ở thanh thống kê đếm tăng dần — phản hồi "app đã tải xong" rõ ràng hơn */
+function countUpTo(el, target, ms = 650) {
+  if (!el) return;
+  if (state.settings.perfLite || prefersReducedMotion()) { el.textContent = target; return; }
+  const from = parseInt(el.textContent, 10) || 0;
+  if (from === target) return;
+  const t0 = performance.now();
+  const step = (now) => {
+    const p = Math.min(1, (now - t0) / ms);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (target - from) * eased);
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function prefersReducedMotion() {
+  try { return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true; }
+  catch { return false; }
 }
 
 function showLoader(text) {
@@ -560,34 +696,43 @@ function heroIconImg(heroName, skinName, cls) {
 /* ═══════════════════════════════════════════════════════════════
    TABS
    ═══════════════════════════════════════════════════════════════ */
-qsa('.tab').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const tab = btn.dataset.tab;
-    qsa('.tab').forEach((b) => b.classList.toggle('active', b === btn));
-    qsa('.page').forEach((p) => p.classList.toggle('active', p.id === `page-${tab}`));
-    haptic('light');
-    if (tab === 'cart') renderCart();
-    if (tab === 'more') refreshSettingsLabels();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
+/* 1 nơi duy nhất đổi tab — dùng cho cả bấm tay lẫn chuyển tự động */
+function switchTab(tab, { scroll = true } = {}) {
+  qsa('.tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  qsa('.page').forEach((p) => p.classList.toggle('active', p.id === `page-${tab}`));
+  if (tab === 'cart') renderCart();
+  if (tab === 'more') refreshSettingsLabels();
+  if (scroll) {
+    const smooth = !state.settings.perfLite && !prefersReducedMotion();
+    window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+  }
+  scheduleBack();
+}
+
+$('tabsBar').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab');
+  if (!btn) return;
+  haptic('light');
+  switchTab(btn.dataset.tab);
 });
 
 /* ═══════════════════════════════════════════════════════════════
    ALPHA / HERO / SKIN PAGES
    ═══════════════════════════════════════════════════════════════ */
+/* Dựng HTML 1 lần rồi gán innerHTML — nhanh hơn nhiều so với appendChild từng ô.
+   Sự kiện dùng delegation (1 listener / lưới) thay vì 1 listener / ô. */
 function renderAlphabet() {
-  const folders = Object.keys(state.catalog);
-  const letters = [...new Set(folders.map((f) => f[0].toUpperCase()))].sort();
-  const grid = $('alphaGrid');
-  grid.innerHTML = '';
-  letters.forEach((L) => {
-    const count = folders.filter((f) => f[0].toUpperCase() === L).length;
-    const cell = document.createElement('button');
-    cell.className = 'alpha-cell';
-    cell.innerHTML = `${L}<span class="ac-count">${count}</span>`;
-    cell.addEventListener('click', () => openLetter(L));
-    grid.appendChild(cell);
-  });
+  const counts = new Map();
+  for (const f of Object.keys(state.catalog)) {
+    const L = f[0].toUpperCase();
+    counts.set(L, (counts.get(L) || 0) + 1);
+  }
+  const letters = [...counts.keys()].sort();
+  $('alphaGrid').innerHTML = letters
+    .map((L, i) => `<button class="alpha-cell" data-letter="${escapeAttr(L)}" style="animation-delay:${Math.min(i, 12) * 0.03}s">${escapeHtml(L)}<span class="ac-count">${counts.get(L)}</span></button>`)
+    .join('');
+  const skel = $('alphaSkel');
+  if (skel) skel.hidden = true;
 }
 
 function openLetter(L) {
@@ -598,26 +743,22 @@ function openLetter(L) {
     .sort();
   $('heroListTitle').textContent = `Chữ "${L}"`;
   $('heroListSub').textContent = `${folders.length} tướng`;
-  const grid = $('heroGrid');
-  grid.innerHTML = '';
-  folders.forEach((f, i) => {
+
+  $('heroGrid').innerHTML = folders.map((f, i) => {
     const skins = state.catalog[f] || [];
-    const cell = document.createElement('button');
-    cell.className = 'hero-cell hero-card';
-    if (state.cart[f]) cell.classList.add('has-skin');
     const iconHtml = heroIconImg(f, null, 'hc-icon') || svgIcon(SVG_HERO, 'hc-icon-fb');
     const hid = heroDisplayId(f);
-    cell.innerHTML = `
+    return `<button class="hero-cell hero-card${state.cart[f] ? ' has-skin' : ''}"
+        data-folder="${escapeAttr(f)}" style="animation-delay:${Math.min(i, 30) * 0.025}s">
       <div class="hc-ava-wrap">${iconHtml}</div>
       <div class="hc-meta">
         <span class="hc-name">${escapeHtml(f)}</span>
         <span class="hc-skins">${skins.length} skin${hid ? ` · <em class="hc-id">#${escapeHtml(hid)}</em>` : ''}</span>
       </div>
-      <span class="hc-chev">›</span>`;
-    cell.style.animationDelay = `${Math.min(i, 30) * 0.025}s`;
-    cell.addEventListener('click', () => openHero(f));
-    grid.appendChild(cell);
-  });
+      <span class="hc-chev">›</span>
+    </button>`;
+  }).join('');
+
   switchHeroesPane('list');
 }
 
@@ -630,37 +771,44 @@ function openHero(folder) {
   $('skinListSub').textContent = skins.length
     ? `${skins.length} skin có sẵn${hid ? ` · ID ${hid}` : ''}`
     : 'Chưa có skin';
-  // banner icon tướng
-  const head = $('skinListTitle');
-  if (head && !head.dataset.iconBound) {
-    // keep plain title; icon sits in grid
-  }
+
   const grid = $('skinGrid');
-  grid.innerHTML = '';
   grid.className = 'skin-grid icon-mode';
   if (!skins.length) {
     grid.innerHTML = `<div class="empty"><div class="empty-icon ei-svg">${SVG_HERO}</div><p>Tướng này chưa có skin trong catalog.</p></div>`;
   } else {
-    skins.forEach((s, i) => {
-      const cell = document.createElement('button');
-      cell.className = 'skin-icon-cell';
-      if (state.cart[folder] === s) cell.classList.add('selected');
+    grid.innerHTML = skins.map((s, i) => {
       const skIcon = heroIconImg(folder, s, 'sk-portrait');
       const code = state.skinCodes[folder + '|' + s] || '';
       const shortName = s.replace(folder + ' ', '');
-      cell.innerHTML = `
+      return `<button class="skin-icon-cell${state.cart[folder] === s ? ' selected' : ''}"
+          data-i="${i}" style="animation-delay:${Math.min(i, 20) * 0.03}s">
         <div class="sk-ava">${skIcon || svgIcon(SVG_HERO, 'sk-portrait-fb')}</div>
         <span class="sk-label">${escapeHtml(shortName)}</span>
         ${code ? `<span class="sk-code">${escapeHtml(code)}</span>` : ''}
         <span class="sk-check">✓</span>
-      `;
-      cell.style.animationDelay = `${Math.min(i, 20) * 0.03}s`;
-      cell.addEventListener('click', () => pickSkin(folder, s, cell));
-      grid.appendChild(cell);
-    });
+      </button>`;
+    }).join('');
   }
   switchHeroesPane('skin');
 }
+
+/* ── delegation: 1 listener cho mỗi lưới, gắn 1 lần khi khởi động ── */
+$('alphaGrid').addEventListener('click', (e) => {
+  const c = e.target.closest('.alpha-cell');
+  if (c) openLetter(c.dataset.letter);
+});
+$('heroGrid').addEventListener('click', (e) => {
+  const c = e.target.closest('.hero-cell');
+  if (c) openHero(c.dataset.folder);
+});
+$('skinGrid').addEventListener('click', (e) => {
+  const c = e.target.closest('.skin-icon-cell');
+  if (!c) return;
+  const folder = state.currentHero;
+  const skin = (state.catalog[folder] || [])[Number(c.dataset.i)];
+  if (skin) pickSkin(folder, skin, c);
+});
 
 function switchHeroesPane(which) {
   $('alphaPane').hidden = which !== 'alpha';
@@ -697,6 +845,22 @@ $('heroSearchClr').addEventListener('click', () => {
   doHeroSearch('');
 });
 
+/* Index phẳng dựng 1 lần sau khi tải catalog — mỗi lần gõ chỉ quét mảng
+   đã lowercase sẵn, không phải toLowerCase() lại ~2000 chuỗi mỗi phím. */
+function buildSearchIndex() {
+  const idx = [];
+  for (const [folder, skins] of Object.entries(state.catalog)) {
+    idx.push({ type: 'hero', folder, hay: folder.toLowerCase() });
+    if (!Array.isArray(skins)) continue;
+    for (const s of skins) {
+      idx.push({ type: 'skin', folder, skin: s, hay: s.toLowerCase() });
+    }
+  }
+  state.searchIndex = idx;
+}
+
+const SEARCH_LIMIT = 50;
+
 function doHeroSearch(qRaw) {
   const wrap = $('heroSearchResults');
   if (qRaw.length < 2) {
@@ -708,52 +872,50 @@ function doHeroSearch(qRaw) {
   $('alphaGrid').hidden = true;
   const q = qRaw.toLowerCase();
   const hits = [];
-  for (const [folder, skins] of Object.entries(state.catalog)) {
-    const folderHit = folder.toLowerCase().includes(q);
-    if (folderHit) {
-      hits.push({ type: 'hero', folder });
-    }
-    for (const s of skins) {
-      if (s.toLowerCase().includes(q)) {
-        hits.push({ type: 'skin', folder, skin: s });
-      }
-      if (hits.length > 60) break;
-    }
-    if (hits.length > 60) break;
+  for (const it of state.searchIndex) {
+    if (it.hay.includes(q)) hits.push(it);
+    if (hits.length >= SEARCH_LIMIT) break;
   }
-  wrap.innerHTML = '';
+
   if (!hits.length) {
     wrap.innerHTML = `<div class="empty"><div class="empty-icon ei-svg">${SVG_SEARCH}</div><p>Không tìm thấy "<b>${escapeHtml(qRaw)}</b>"</p></div>`;
   } else {
-    hits.slice(0, 50).forEach((h, i) => {
-      const row = document.createElement('div');
-      row.className = 'search-row';
-      row.style.animationDelay = `${Math.min(i, 20) * 0.02}s`;
+    wrap.innerHTML = hits.map((h, i) => {
+      const delay = `style="animation-delay:${Math.min(i, 20) * 0.02}s"`;
       if (h.type === 'hero') {
-        const srIcon = heroIconImg(h.folder, null, 'sr-icon');
-        row.innerHTML = `${srIcon}<div><b>${highlight(h.folder, qRaw)}</b><div class="meta">Mở danh sách skin</div></div><span class="chev">›</span>`;
-        row.addEventListener('click', () => {
-          $('heroSearch').value = '';
-          $('heroSearchClr').hidden = true;
-          doHeroSearch('');
-          openHero(h.folder);
-        });
-      } else {
-        const srIcon2 = heroIconImg(h.folder, h.skin, 'sr-icon');
-        row.innerHTML = `${srIcon2}<div><b>${escapeHtml(h.folder)}</b><div class="meta">${highlight(h.skin, qRaw)}</div></div><span class="chev">+</span>`;
-        row.addEventListener('click', () => {
-          state.cart[h.folder] = h.skin;
-          saveCart();
-          updateBadge();
-          haptic('success');
-          toast(`✓ ${h.folder} → ${shorten(h.skin, 22)}`, 'success');
-        });
+        return `<div class="search-row" data-sr="hero" data-folder="${escapeAttr(h.folder)}" ${delay}>
+          ${heroIconImg(h.folder, null, 'sr-icon')}
+          <div><b>${highlight(h.folder, qRaw)}</b><div class="meta">Mở danh sách skin</div></div>
+          <span class="chev">›</span></div>`;
       }
-      wrap.appendChild(row);
-    });
+      return `<div class="search-row" data-sr="skin" data-folder="${escapeAttr(h.folder)}" data-skin="${escapeAttr(h.skin)}" ${delay}>
+        ${heroIconImg(h.folder, h.skin, 'sr-icon')}
+        <div><b>${escapeHtml(h.folder)}</b><div class="meta">${highlight(h.skin, qRaw)}</div></div>
+        <span class="chev">+</span></div>`;
+    }).join('');
   }
   wrap.hidden = false;
 }
+
+$('heroSearchResults').addEventListener('click', (e) => {
+  const row = e.target.closest('.search-row');
+  if (!row) return;
+  const folder = row.dataset.folder;
+  if (row.dataset.sr === 'hero') {
+    $('heroSearch').value = '';
+    $('heroSearchClr').hidden = true;
+    doHeroSearch('');
+    openHero(folder);
+    return;
+  }
+  const skin = row.dataset.skin;
+  state.cart[folder] = skin;
+  saveCart();
+  updateBadge();
+  haptic('success');
+  flashOk(row);
+  toast(`✓ ${folder} → ${shorten(skin, 22)}`, 'success');
+});
 
 /* ═══════════════════════════════════════════════════════════════
    EXTRAS
@@ -796,52 +958,51 @@ function syncExtraCardsState() {
 }
 
 function openZoomPicker() {
-  const grid = $('zoomGrid');
-  grid.innerHTML = '';
+  const cur = state.cart['Cam Xa'];
+  const cells = [];
   let i = 0;
   for (let z = 105; z < 300; z += 5) {
-    const b = document.createElement('button');
-    b.className = 'zoom-cell';
-    b.textContent = `${z}%`;
-    if (state.cart['Cam Xa'] === `${z}%`) b.classList.add('selected');
-    b.style.animationDelay = `${i++ * 0.012}s`;
-    b.addEventListener('click', () => {
-      state.cart['Cam Xa'] = `${z}%`;
-      saveCart();
-      haptic('success');
-      toast(`✓ Cam Xa ${z}%`, 'success');
-      syncExtraCardsState();
-      switchExtrasPane('list');
-      updateBadge();
-    });
-    grid.appendChild(b);
+    const v = `${z}%`;
+    cells.push(`<button class="zoom-cell${cur === v ? ' selected' : ''}" data-z="${z}" style="animation-delay:${(i++) * 0.012}s">${v}</button>`);
   }
+  $('zoomGrid').innerHTML = cells.join('');
   switchExtrasPane('zoom');
 }
 
+$('zoomGrid').addEventListener('click', (e) => {
+  const b = e.target.closest('.zoom-cell');
+  if (!b) return;
+  state.cart['Cam Xa'] = `${b.dataset.z}%`;
+  saveCart();
+  haptic('success');
+  toast(`✓ Cam Xa ${b.dataset.z}%`, 'success');
+  syncExtraCardsState();
+  switchExtrasPane('list');
+  updateBadge();
+});
+
 function openServerPicker() {
-  const grid = $('serverGrid');
-  grid.innerHTML = '';
-  SERVERS.forEach((s, i) => {
-    const b = document.createElement('button');
-    b.className = 'zoom-cell';
-    b.textContent = s.label;
-    if ((state.cart['Server'] || 'Resources') === s.dir) b.classList.add('selected');
-    b.style.animationDelay = `${i * 0.03}s`;
-    b.addEventListener('click', () => {
-      if (s.dir === 'Resources') delete state.cart['Server'];  // VN = mặc định, không cần lưu
-      else state.cart['Server'] = s.dir;
-      saveCart();
-      haptic('success');
-      toast(`✓ Server: ${s.label}`, 'success');
-      syncExtraCardsState();
-      switchExtrasPane('list');
-      updateBadge();
-    });
-    grid.appendChild(b);
-  });
+  const cur = state.cart['Server'] || 'Resources';
+  $('serverGrid').innerHTML = SERVERS.map((s, i) =>
+    `<button class="zoom-cell${cur === s.dir ? ' selected' : ''}" data-dir="${escapeAttr(s.dir)}" style="animation-delay:${i * 0.03}s">${escapeHtml(s.label)}</button>`
+  ).join('');
   switchExtrasPane('server');
 }
+
+$('serverGrid').addEventListener('click', (e) => {
+  const b = e.target.closest('.zoom-cell');
+  if (!b) return;
+  const dir = b.dataset.dir;
+  const srv = SERVERS.find((s) => s.dir === dir);
+  if (dir === 'Resources') delete state.cart['Server'];   // VN = mặc định, không cần lưu
+  else state.cart['Server'] = dir;
+  saveCart();
+  haptic('success');
+  toast(`✓ Server: ${srv ? srv.label : dir}`, 'success');
+  syncExtraCardsState();
+  switchExtrasPane('list');
+  updateBadge();
+});
 
 function switchExtrasPane(which) {
   $('extrasPane').hidden = which !== 'list';
@@ -929,9 +1090,7 @@ function applyRandomSkins(n) {
   haptic('success');
   toast(`🎲 Random ${picked.length} skin (1 / hero)`, 'success');
   // mở giỏ để xem
-  qsa('.tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === 'cart'));
-  qsa('.page').forEach((p) => p.classList.toggle('active', p.id === 'page-cart'));
-  renderCart();
+  switchTab('cart');
   switchExtrasPane('list');
 }
 
@@ -1054,17 +1213,14 @@ if ($('randApply')) {
   });
 }
 if ($('idListApply')) {
-  $('idListApply').addEventListener('click', () => {
+  $('idListApply').addEventListener('click', (ev) => withBusy(ev.currentTarget, async () => {
     const el = $('idListInput');
     if (el) el.value = normalizeIdText(el.value);
-    applyIdListToCart(el?.value || '', { replaceHeroes: true });
+    const res = applyIdListToCart(el?.value || '', { replaceHeroes: true });
+    if (!res) { shake(ev.currentTarget); return; }
     // sau khi thêm → mở giỏ xem
-    if (Object.keys(state.cart).some((k) => !EXTRA_KEYS.has(k))) {
-      qsa('.tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === 'cart'));
-      qsa('.page').forEach((p) => p.classList.toggle('active', p.id === 'page-cart'));
-      renderCart();
-    }
-  });
+    if (Object.keys(state.cart).some((k) => !EXTRA_KEYS.has(k))) switchTab('cart');
+  }));
 }
 if ($('idListClear')) {
   $('idListClear').addEventListener('click', () => {
@@ -1147,45 +1303,62 @@ function renderCart() {
   $('csMeta').textContent = `${heroCount} Skin · ${extraCount} Bổ trợ`;
   $('csVipBadge').hidden = !state.isVip;
 
-  entries.forEach(([k, v], i) => {
+  list.innerHTML = entries.map(([k, v], i) => {
     const isExtra = EXTRA_KEYS.has(k);
-    const div = document.createElement('div');
-    div.className = 'cart-item' + (isExtra ? ' extra' : '');
-    div.style.animationDelay = `${Math.min(i, 15) * 0.04}s`;
     const cartIconHtml = isExtra
       ? `<div class="cart-icon ico-svg">${SVG_TOOL}</div>`
       : (heroIconImg(k, v, 'cart-avatar') || `<div class="cart-icon ico-svg">${SVG_HERO}</div>`);
-    div.innerHTML = `
+    return `<div class="cart-item${isExtra ? ' extra' : ''}" style="animation-delay:${Math.min(i, 15) * 0.04}s">
       ${cartIconHtml}
       <div>
         <div class="cart-name">${escapeHtml(k)}</div>
         <div class="cart-source">${escapeHtml(v)}</div>
       </div>
-      <button class="cart-del" data-key="${escapeAttr(k)}" aria-label="Remove">✕</button>
-    `;
-    list.appendChild(div);
-  });
-
-  qsa('.cart-del', list).forEach((b) => {
-    b.addEventListener('click', () => {
-      const key = b.dataset.key;
-      const item = b.closest('.cart-item');
-      item.classList.add('removing');
-      haptic('warning');
-      setTimeout(() => {
-        delete state.cart[key];
-        saveCart();
-        updateBadge();
-        renderCart();
-        syncExtraCardsState();
-      }, 300);
-    });
-  });
+      <button class="cart-del" data-key="${escapeAttr(k)}" aria-label="Xoá ${escapeAttr(k)}">✕</button>
+    </div>`;
+  }).join('');
 }
 
-$('clearBtn').addEventListener('click', () => {
-  if (!Object.keys(state.cart).length) return;
-  if (!confirm('Xoá toàn bộ giỏ?')) return;
+/* Xoá 1 mục — có 'Hoàn tác' trong toast, khỏi phải đi chọn lại */
+$('cartList').addEventListener('click', (e) => {
+  const b = e.target.closest('.cart-del');
+  if (!b) return;
+  const key = b.dataset.key;
+  const value = state.cart[key];
+  if (value === undefined) return;
+  const item = b.closest('.cart-item');
+  item.classList.add('removing');
+  haptic('warning');
+  setTimeout(() => {
+    delete state.cart[key];
+    saveCart();
+    updateBadge();
+    renderCart();
+    syncExtraCardsState();
+    const t = toast(`Đã gỡ ${shorten(key, 18)} · chạm để hoàn tác`, 'warn', 4000);
+    if (t) t.addEventListener('click', () => {
+      state.cart[key] = value;
+      saveCart();
+      updateBadge();
+      renderCart();
+      syncExtraCardsState();
+      haptic('success');
+      toast(`↩️ Đã khôi phục ${shorten(key, 18)}`, 'success');
+    }, { once: true });
+  }, 300);
+});
+
+$('clearBtn').addEventListener('click', async () => {
+  const n = Object.keys(state.cart).length;
+  if (!n) { toast('Giỏ đang trống rồi', 'info'); return; }
+  const ok = await askConfirm({
+    title: 'Xoá toàn bộ giỏ?',
+    message: `${n} mục đang chọn sẽ bị gỡ khỏi giỏ. Không thể hoàn tác.`,
+    okText: 'Xoá hết',
+    danger: true,
+    icon: '🧹',
+  });
+  if (!ok) return;
   state.cart = {};
   clearCartStorage();
   apiSend({ type: 'clearcart' }, true);   // xoá luôn giỏ phía server (Test JSON) cho khớp
@@ -1196,35 +1369,53 @@ $('clearBtn').addEventListener('click', () => {
   toast('🧹 Đã xoá sạch giỏ', 'success');
 });
 
-$('runBtn').addEventListener('click', () => {
+$('runBtn').addEventListener('click', (ev) => {
+  const btn = ev.currentTarget;
   const entries = Object.entries(state.cart);
-  if (!entries.length) { toast('Giỏ trống!', 'error'); haptic('error'); return; }
+  if (!entries.length) {
+    toast('Giỏ trống — chọn skin hoặc bổ trợ trước nhé!', 'error');
+    haptic('error');
+    shake(btn);
+    return;
+  }
 
   // Cam Xa mod được riêng lẻ (không cần Skin) — tool_run.py đã hỗ trợ, gửi thẳng.
 
   haptic('success');
   if (state.settings.confetti) fireConfetti();
 
-  if (API_READY) {
-    // Luồng chính: gửi qua API, phản hồi hiện trong khung chat nổi
-    showBotChat(false);
-    const n = entries.length;
-    botLog(`🚀 Chạy Mod cho ${n} mục:\n${entries.map(([k]) => '• ' + k).join('\n')}`, null, 'me');
-    botLog('Đã gửi tới hệ thống · đang xử lý', null, 'sys');
-    startPolling();
-    _appendTyping();
-    apiSend({ type: 'chaymod', items: state.cart });
-  } else if (getTgUser()) {
-    // Dự phòng: mở qua nút bàn phím → sendData
-    const payload = { type: 'chaymod', items: state.cart, ts: Date.now(), vip: state.isVip, admin: state.isAdmin };
-    try {
-      tg.sendData(JSON.stringify(payload));
-    } catch (e) {
-      toast('Lỗi gửi: ' + e.message, 'error');
+  withBusy(btn, async () => {
+    if (API_READY) {
+      // Luồng chính: gửi qua API, phản hồi hiện trong khung chat nổi
+      showBotChat(false);
+      const n = entries.length;
+      botLog(`🚀 Chạy Mod cho ${n} mục:\n${entries.map(([k]) => '• ' + k).join('\n')}`, null, 'me');
+      botLog('Đã gửi tới hệ thống · đang xử lý', null, 'sys');
+      startPolling();
+      _appendTyping();
+      const ok = await apiSend({ type: 'chaymod', items: state.cart });
+      if (!ok) {
+        _removeTyping();
+        botLog('Gửi thất bại — kiểm tra kết nối rồi bấm Chạy Mod lại.', null, 'sys-err');
+        haptic('error');
+      }
       return;
     }
-    showRunOverlay(entries.length);
-  } else {
+
+    if (getTgUser()) {
+      // Dự phòng: mở qua nút bàn phím → sendData
+      const payload = { type: 'chaymod', items: state.cart, ts: Date.now(), vip: state.isVip, admin: state.isAdmin };
+      try {
+        tg.sendData(JSON.stringify(payload));
+      } catch (e) {
+        toast('Lỗi gửi: ' + e.message, 'error');
+        haptic('error');
+        return;
+      }
+      showRunOverlay(entries.length);
+      return;
+    }
+
     // Ngoài Telegram: deep link (chỉ hợp giỏ nhỏ)
     const cartJson = JSON.stringify(state.cart);
     const encoded = btoa(unescape(encodeURIComponent(cartJson))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
@@ -1232,7 +1423,7 @@ $('runBtn').addEventListener('click', () => {
     toast('📤 Đang chuyển sang Telegram...', 'success');
     setTimeout(() => { window.open(deepLink, '_blank'); }, 500);
     showRunOverlayWeb(entries.length);
-  }
+  });
 });
 
 function showRunOverlayWeb(itemCount) {
@@ -1304,6 +1495,32 @@ $('runStay').addEventListener('click', () => {
   on('chatMin',   () => { haptic('light'); minimizeChat(); });
   on('chatClose', () => { haptic('light'); closeChat(); });
   on('chatFab',   () => { haptic('light'); showBotChat(false); });
+  on('chatNewPill', () => { haptic('light'); _scrollChatEnd(true); });
+  on('chatMax',   () => {
+    haptic('light');
+    const p = $('botPanel');
+    if (!p) return;
+    const max = p.classList.toggle('maximized');
+    // rời chế độ phóng to → bỏ toạ độ do kéo tay để về góc mặc định
+    if (!max) { p.style.left = ''; p.style.top = ''; p.style.right = ''; p.style.bottom = ''; }
+    $('chatMax').textContent = max ? '⤡' : '⤢';
+    $('chatMax').title = max ? 'Thu gọn' : 'Phóng to';
+    requestAnimationFrame(() => _scrollChatEnd(false));
+  });
+
+  // user cuộn về đáy → tự ẩn pill "tin mới"
+  const box = $('botLog');
+  if (box) {
+    let raf = 0;
+    box.addEventListener('scroll', () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        if (_isChatNearBottom()) _toggleNewPill(false);
+      });
+    }, { passive: true });
+  }
+
   _initChatDrag();
 })();
 
@@ -1316,12 +1533,20 @@ function bindAdminButtons() {
   });
 }
 
-function onAdminClick(btn) {
+async function onAdminClick(btn) {
   const act = btn.dataset.act;
   const confirmMsg = btn.dataset.confirm;
-  if (confirmMsg && !confirm(confirmMsg)) return;
   if (!getTgUser()) { showWebLoginGate(); toast('Cần mở qua Telegram!', 'error'); return; }
-  if (!state.isAdmin) { toast('Bạn không phải Admin!', 'error'); haptic('error'); return; }
+  if (!state.isAdmin) { toast('Bạn không phải Admin!', 'error'); haptic('error'); shake(btn); return; }
+  if (confirmMsg) {
+    const ok = await askConfirm({
+      title: 'Xác nhận thao tác',
+      message: confirmMsg,
+      okText: 'Thực hiện',
+      danger: btn.classList.contains('btn-danger'),
+    });
+    if (!ok) return;
+  }
 
   const args = {};
   let valid = true;
@@ -1361,26 +1586,32 @@ function onAdminClick(btn) {
       break;
   }
 
-  if (!valid) { haptic('error'); return; }
+  if (!valid) { haptic('error'); shake(btn.closest('.admin-card') || btn); return; }
 
   haptic('success');
-  if (API_READY) {
-    showBotChat(false);
-    botLog('⚙️ Lệnh quản trị: ' + act, null, 'me');
-    botLog('Đang thực thi', null, 'sys');
-    startPolling();
-    _appendTyping();
-    apiSend({ type: 'admin', action: act, args });
-  } else {
+  await withBusy(btn, async () => {
+    if (API_READY) {
+      showBotChat(false);
+      botLog('⚙️ Lệnh quản trị: ' + act, null, 'me');
+      botLog('Đang thực thi', null, 'sys');
+      startPolling();
+      _appendTyping();
+      const ok = await apiSend({ type: 'admin', action: act, args });
+      if (!ok) { _removeTyping(); botLog('Không gửi được lệnh — thử lại sau.', null, 'sys-err'); }
+      return ok;
+    }
     const payload = { type: 'admin', action: act, args, ts: Date.now() };
     try {
       tg.sendData(JSON.stringify(payload));
     } catch (e) {
       toast('Lỗi gửi: ' + e.message, 'error');
-      return;
+      return false;
     }
     toast('📤 Đã gửi → mở chat bot để xem kết quả', 'success');
-  }
+    return true;
+  });
+
+  flashOk(btn.closest('.admin-card') || btn);
   // clear inputs after send
   if (['vipmember','congvipall','resetvip','ban','unban','guiall'].includes(act)) {
     ['adm_vip_uid','adm_vip_days','adm_all_days','adm_reset_uid','adm_ban_uid','adm_unban_uid','adm_broadcast']
@@ -1394,10 +1625,12 @@ function onAdminClick(btn) {
 function refreshSettingsLabels() {
   $('hapticVal').textContent = state.settings.haptic ? 'BẬT' : 'TẮT';
   $('confettiVal').textContent = state.settings.confetti ? 'BẬT' : 'TẮT';
+  const pv = $('perfVal');
+  if (pv) pv.textContent = state.settings.perfLite ? 'BẬT' : 'TẮT';
 }
 
 qsa('.set-card').forEach((card) => {
-  card.addEventListener('click', () => {
+  card.addEventListener('click', async () => {
     const a = card.dataset.action;
     haptic('light');
     if (a === 'checkvip') {
@@ -1436,6 +1669,14 @@ qsa('.set-card').forEach((card) => {
       saveSettings();
       refreshSettingsLabels();
       toast(`🎉 Pháo bông ${state.settings.confetti ? 'BẬT' : 'TẮT'}`, 'success');
+    } else if (a === 'perflite') {
+      state.settings.perfLite = !state.settings.perfLite;
+      saveSettings();
+      applyPerfMode();
+      refreshSettingsLabels();
+      toast(state.settings.perfLite
+        ? '⚡ Hiệu ứng nhẹ BẬT — ưu tiên mượt'
+        : '✨ Hiệu ứng nhẹ TẮT — full liquid glass', 'success');
     } else if (a === 'contact') {
       try { tg?.openTelegramLink?.(ADMIN_CONTACT); } catch {}
       try { tg?.openLink?.(ADMIN_CONTACT); } catch {}
@@ -1443,7 +1684,14 @@ qsa('.set-card').forEach((card) => {
       copyText('109874557013').then((ok) =>
         toast(ok ? '📋 Đã copy STK: 109874557013 — VIETINBANK' : '🏦 STK: 109874557013 — VIETINBANK', 'success'));
     } else if (a === 'reset') {
-      if (!confirm('Xoá cache + giỏ + cài đặt?')) return;
+      const ok = await askConfirm({
+        title: 'Đặt lại ứng dụng?',
+        message: 'Xoá cache, giỏ hàng và cài đặt. Kết nối bot vẫn được giữ lại.',
+        okText: 'Đặt lại',
+        danger: true,
+        icon: '♻️',
+      });
+      if (!ok) return;
       try { localStorage.clear(); } catch {}
       clearCartStorage();                       // xoá luôn giỏ trên Telegram CloudStorage
       apiSend({ type: 'clearcart' }, true);     // xoá luôn giỏ phía server (Test JSON)
@@ -1451,18 +1699,37 @@ qsa('.set-card').forEach((card) => {
       state.cart = {};
       state.settings = defaultSettings();
       saveSettings();
+      applyPerfMode();
       updateBadge();
       renderCart();
       syncExtraCardsState();
       refreshSettingsLabels();
       toast('♻️ Đã reset sạch (giỏ + cache)', 'success');
     } else if (a === 'about') {
-      toast('BANNEI MOD LQ · Liquid Glass 6.1 · 2026', 'success');
+      toast('BANNEI MOD LQ · Liquid Glass 7.0', 'info');
     }
   });
 });
 
-function defaultSettings() { return { haptic: true, confetti: true }; }
+/* Máy yếu → tự bật hiệu ứng nhẹ ngay lần mở đầu (user vẫn tắt được trong tab Khác) */
+function guessLowEndDevice() {
+  try {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return true;
+    const mem = navigator.deviceMemory;
+    if (typeof mem === 'number' && mem > 0 && mem <= 3) return true;
+    const cpu = navigator.hardwareConcurrency;
+    if (typeof cpu === 'number' && cpu > 0 && cpu <= 4) return true;
+  } catch {}
+  return false;
+}
+
+function defaultSettings() {
+  return { haptic: true, confetti: true, perfLite: guessLowEndDevice() };
+}
+
+function applyPerfMode() {
+  document.body.classList.toggle('perf-lite', !!state.settings.perfLite);
+}
 function loadSettings() {
   try {
     const v = localStorage.getItem('bannei_settings');
@@ -1551,12 +1818,145 @@ function updateBadge() {
   if (n) el.removeAttribute('data-zero'); else el.setAttribute('data-zero', '');
   $('stCart').textContent = n;
 }
-function toast(msg, type = '') {
-  const t = $('toast');
-  t.className = 'toast show ' + type;
-  t.textContent = msg;
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => { t.className = 'toast'; }, 2400);
+/* ── TOAST STACK ──
+   Xếp chồng tối đa 3 tin, chạm để tắt sớm, có thanh đếm ngược.
+   Emoji đứng đầu message được tách ra làm icon (giữ nguyên call site cũ). */
+const TOAST_MAX = 3;
+const TOAST_FALLBACK_ICON = { success: '✓', error: '✕', warn: '!', info: 'i', '': '•' };
+let _leadEmojiRe = null;
+try {
+  _leadEmojiRe = new RegExp('^((?:\\p{Extended_Pictographic}|[\\u2190-\\u21FF\\u2600-\\u27BF])[\\uFE0F\\u200D\\p{Extended_Pictographic}]*)\\s*', 'u');
+} catch { _leadEmojiRe = null; }
+
+function splitToastIcon(msg, type) {
+  const s = String(msg);
+  if (_leadEmojiRe) {
+    const m = _leadEmojiRe.exec(s);
+    if (m && s.length > m[0].length) return { icon: m[1], text: s.slice(m[0].length) };
+  }
+  return { icon: TOAST_FALLBACK_ICON[type] ?? TOAST_FALLBACK_ICON[''], text: s };
+}
+
+function dismissToast(el) {
+  if (!el || el.dataset.out === '1') return;
+  el.dataset.out = '1';
+  clearTimeout(el._t);
+  el.classList.add('out');
+  setTimeout(() => el.remove(), 220);
+}
+
+function toast(msg, type = '', ms) {
+  const stack = $('toastStack');
+  if (!stack) return;
+  const dur = ms || (type === 'error' ? 3600 : 2400);
+  const { icon, text } = splitToastIcon(msg, type);
+
+  const el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.innerHTML =
+    `<span class="toast-ic">${escapeHtml(icon)}</span>` +
+    `<span class="toast-tx">${escapeHtml(text)}</span>` +
+    `<span class="toast-bar" style="animation-duration:${dur}ms"></span>`;
+  el.addEventListener('click', () => dismissToast(el));
+  stack.appendChild(el);
+
+  // giữ stack gọn: tin cũ nhất rời đi trước
+  while (stack.children.length > TOAST_MAX) dismissToast(stack.firstElementChild);
+
+  el._t = setTimeout(() => dismissToast(el), dur);
+  return el;
+}
+
+/* ── MODAL XÁC NHẬN (thay confirm() của trình duyệt) ── */
+function askConfirm(opts = {}) {
+  const {
+    title = 'Xác nhận',
+    message = '',
+    okText = 'Đồng ý',
+    cancelText = 'Huỷ',
+    danger = false,
+    icon = danger ? '⚠️' : '❓',
+  } = opts;
+
+  return new Promise((resolve) => {
+    const back = document.createElement('div');
+    back.className = 'modal-back';
+    back.innerHTML = `
+      <div class="modal-card ${danger ? 'danger' : 'ask'}" role="dialog" aria-modal="true">
+        <div class="modal-ic">${escapeHtml(icon)}</div>
+        <h3>${escapeHtml(title)}</h3>
+        ${message ? `<p>${escapeHtml(message)}</p>` : ''}
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" data-mc="0">${escapeHtml(cancelText)}</button>
+          <button type="button" class="${danger ? 'btn-danger' : 'btn-primary'}" data-mc="1">${escapeHtml(okText)}</button>
+        </div>
+      </div>`;
+
+    let done = false;
+    const close = (val) => {
+      if (done) return;
+      done = true;
+      back.classList.add('out');
+      setTimeout(() => back.remove(), 180);
+      document.removeEventListener('keydown', onKey);
+      resolve(val);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close(false);
+      if (e.key === 'Enter') close(true);
+    };
+
+    back.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-mc]');
+      if (b) { haptic(b.dataset.mc === '1' ? 'warning' : 'light'); return close(b.dataset.mc === '1'); }
+      if (e.target === back) close(false);   // chạm nền = huỷ
+    });
+    document.addEventListener('keydown', onKey);
+
+    document.body.appendChild(back);
+    back.querySelector('[data-mc="1"]')?.focus();
+  });
+}
+
+/* ── TRẠNG THÁI NÚT: khoá + spinner trong lúc chờ ── */
+async function withBusy(btn, fn) {
+  if (!btn) return fn();
+  if (btn.dataset.busy === '1') return;
+  btn.dataset.busy = '1';
+  btn.classList.add('is-loading');
+  try {
+    return await fn();
+  } finally {
+    btn.classList.remove('is-loading');
+    delete btn.dataset.busy;
+  }
+}
+
+/* phản hồi thị giác nhanh cho 1 phần tử */
+function flashOk(el) {
+  if (!el) return;
+  el.classList.remove('flash-ok');
+  void el.offsetWidth;
+  el.classList.add('flash-ok');
+  setTimeout(() => el.classList.remove('flash-ok'), 520);
+}
+function shake(el) {
+  if (!el) return;
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+  setTimeout(() => el.classList.remove('shake'), 400);
+}
+
+/* thanh tiến trình mảnh trên đỉnh cho tác vụ nền */
+let _progressDepth = 0;
+function progressStart() {
+  _progressDepth++;
+  $('topProgress')?.classList.add('on');
+}
+function progressEnd() {
+  _progressDepth = Math.max(0, _progressDepth - 1);
+  if (!_progressDepth) $('topProgress')?.classList.remove('on');
 }
 function haptic(kind = 'light') {
   if (!state.settings.haptic) return;
@@ -1615,22 +2015,58 @@ document.addEventListener('click', (e) => {
 /* theme detection */
 function applyTheme() {
   const scheme = tg?.colorScheme || 'dark';
-  document.body.classList.toggle('tg-light', scheme === 'light');
+  const light = scheme === 'light';
+  document.body.classList.toggle('tg-light', light);
+  // thanh trạng thái điện thoại khớp nền app
+  try { tg?.setBackgroundColor?.(light ? '#f4f6fb' : '#07080d'); } catch {}
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', light ? '#f4f6fb' : '#07080d');
 }
 tg?.onEvent?.('themeChanged', applyTheme);
+
+/* ═══════════════════════════════════════════════════════════════
+   VIEWPORT · BÀN PHÍM ẢO
+   ═══════════════════════════════════════════════════════════════ */
+// Telegram co/giãn viewport khi cuộn — dùng chiều cao thật thay cho 100vh
+function applyViewport() {
+  const h = tg?.viewportStableHeight || tg?.viewportHeight;
+  if (h > 0) document.documentElement.style.setProperty('--vh', h + 'px');
+}
+tg?.onEvent?.('viewportChanged', applyViewport);
+window.addEventListener('orientationchange', () => setTimeout(applyViewport, 220));
+
+// Bàn phím ảo mở → tạm ẩn tab bar để không che ô nhập
+const _isTextField = (el) => !!el && typeof el.matches === 'function' && el.matches('input, textarea');
+document.addEventListener('focusin', (e) => {
+  if (_isTextField(e.target)) document.body.classList.add('kb-open');
+});
+document.addEventListener('focusout', (e) => {
+  if (!_isTextField(e.target)) return;
+  setTimeout(() => {
+    if (!_isTextField(document.activeElement)) document.body.classList.remove('kb-open');
+  }, 80);
+});
 
 /* ═══════════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════════ */
 (async function boot() {
+  applyTheme();
+  applyPerfMode();
+  applyViewport();
   loginTelegram();
   await loadCartLocal();
   updateBadge();
   syncExtraCardsState();
   bindAdminButtons();
   refreshSettingsLabels();
-  applyTheme();
-  await Promise.all([loadCatalog(), loadHeroIcons(), loadSkinCodes()]);
+
+  // 3 request chạy song song, nhưng bảng chữ cái vẽ ngay khi catalog về —
+  // icon/mã skin đến sau, đã có HERO_PREFIX tĩnh làm dự phòng
+  const pIcons = loadHeroIcons();
+  const pCodes = loadSkinCodes();
+  await loadCatalog();
+  await Promise.all([pIcons, pCodes]);
 
   checkApiConnection();
   drainBaseline();
@@ -1649,18 +2085,25 @@ tg?.onEvent?.('themeChanged', applyTheme);
 function refreshBack() {
   if (!tg?.BackButton) return;
   const heroesActive = $('page-heroes').classList.contains('active');
-  const onSubHeroes = heroesActive && (!$('alphaPane').hidden === false || !$('heroListPane').hidden || !$('skinListPane').hidden);
   const extrasActive = $('page-extras').classList.contains('active');
+  const onSubHeroes = heroesActive && (!$('heroListPane').hidden || !$('skinListPane').hidden);
   const onSubExtras = extrasActive && (
     !$('zoomPicker').hidden ||
     !$('serverPicker').hidden ||
-    ($('randomPicker') && !$('randomPicker').hidden) ||
-    ($('idListPicker') && !$('idListPicker').hidden)
+    !!($('randomPicker') && !$('randomPicker').hidden) ||
+    !!($('idListPicker') && !$('idListPicker').hidden)
   );
-  const subOpen =
-    (heroesActive && (!$('heroListPane').hidden || !$('skinListPane').hidden)) ||
-    onSubExtras;
-  if (subOpen) tg.BackButton.show(); else tg.BackButton.hide();
+  if (onSubHeroes || onSubExtras) tg.BackButton.show();
+  else tg.BackButton.hide();
+}
+
+/* Gộp nhiều lần gọi trong cùng 1 khung hình — trước đây observer quét
+   toàn bộ body nên mỗi lần đổi class (ripple, chọn skin, tin chat…)
+   đều chạy lại refreshBack. */
+let _backRaf = 0;
+function scheduleBack() {
+  if (_backRaf) return;
+  _backRaf = requestAnimationFrame(() => { _backRaf = 0; refreshBack(); });
 }
 tg?.BackButton?.onClick?.(() => {
   if (!$('skinListPane').hidden) { switchHeroesPane('list'); haptic('light'); refreshBack(); return; }
@@ -1679,5 +2122,12 @@ tg?.BackButton?.onClick?.(() => {
   refreshBack();
 });
 
-// re-eval back on every UI mutation hook
-new MutationObserver(refreshBack).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['hidden','class'] });
+// Chỉ theo dõi việc ẩn/hiện các pane con — không quét cả body nữa
+(() => {
+  const obs = new MutationObserver(scheduleBack);
+  ['page-heroes', 'page-extras'].forEach((id) => {
+    const el = $(id);
+    if (el) obs.observe(el, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
+  });
+  scheduleBack();
+})();
